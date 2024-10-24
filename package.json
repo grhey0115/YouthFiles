@@ -1,0 +1,50 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@headlessui/react": "^2.0.0",
+        "@inertiajs/react": "^1.0.0",
+        "@tailwindcss/forms": "^0.5.3",
+        "@vitejs/plugin-react": "^4.2.0",
+        "autoprefixer": "^10.4.12",
+        "axios": "^1.7.7",
+        "laravel-echo": "^1.16.1",
+        "laravel-vite-plugin": "^1.0",
+        "postcss": "^8.4.31",
+        "pusher-js": "^8.4.0-rc2",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "tailwindcss": "^3.2.1",
+        "vite": "^5.0"
+    },
+    "dependencies": {
+        "@ant-design/icons": "^5.5.1",
+        "@chakra-ui/icons": "^2.2.3",
+        "@chakra-ui/react": "^2.9.4",
+        "@emotion/react": "^11.13.3",
+        "@emotion/styled": "^11.13.0",
+        "@fortawesome/free-solid-svg-icons": "^6.6.0",
+        "@fortawesome/react-fontawesome": "^0.2.2",
+        "@inertiajs/inertia-react": "^0.8.1",
+        "@mantine/core": "^7.12.2",
+        "@mantine/hooks": "^7.12.2",
+        "@mui/icons-material": "^6.1.1",
+        "@mui/material": "^6.1.1",
+        "antd": "^5.21.2",
+        "framer-motion": "^11.11.0",
+        "lodash.debounce": "^4.0.8",
+        "react-avatar": "^5.0.3",
+        "react-barcode": "^1.5.3",
+        "react-dropzone": "^14.2.3",
+        "react-icons": "^5.3.0",
+        "react-modal": "^3.16.1",
+        "react-tag-input": "^6.10.3",
+        "react-tag-input-component": "^2.0.2",
+        "react-toastify": "^10.0.5",
+        "styled-components": "^6.1.13"
+    }
+}
