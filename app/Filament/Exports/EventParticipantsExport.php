@@ -19,15 +19,15 @@ class EventParticipantsExport implements FromCollection, WithHeadings
     {
         return $this->participants->map(function ($participant) {
             return [
-                'Name' => $participant->name,
-                'Email' => $participant->email,
-                'Attendance Status' => $participant->pivot->attendance_status, // Adjust if necessary
+                'Full Name' => "{$participant->last_name}, {$participant->first_name} {$participant->middle_name}", // Format LastName, FirstName MiddleName
+                'Email Address' => $participant->email,
+                'Status of Attendance' => $participant->pivot->attendance_status,
             ];
         });
     }
 
     public function headings(): array
     {
-        return ['Name', 'Email', 'Attendance Status'];
+        return ['Full Name', 'Email Address', 'Status of Attendance'];
     }
 }
