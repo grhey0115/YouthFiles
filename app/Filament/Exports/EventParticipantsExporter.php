@@ -2,39 +2,32 @@
 
 namespace App\Filament\Exports;
 
-use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class EventParticipantsExporter implements FromCollection, WithHeadings
+class EventParticipantsExport implements FromCollection, WithHeadings
 {
-    protected Collection $users;
+    protected $participants;
 
-    public function __construct(Collection $users)
+    public function __construct(Collection $participants)
     {
-        $this->users = $users;
+        $this->participants = $participants;
     }
 
     public function collection()
     {
-        return $this->users->map(function ($user) {
+        return $this->participants->map(function ($participant) {
             return [
-                'name' => $user->name,
-                'email' => $user->email,
-                'attendance_status' => $user->pivot->attendance_status,
-                'joined_at' => $user->created_at->format('Y-m-d'),
+                'Full Name' => "{$participant->last_name}, {$participant->first_name} {$participant->middle_name}", // Format LastName, FirstName MiddleName
+                'Email Address' => $participant->email,
+                'Status of Attendance' => $participant->pivot->attendance_status,
             ];
         });
     }
 
     public function headings(): array
     {
-        return [
-            'Participant Name',
-            'Email',
-            'Attendance Status',
-            'Joined At',
-        ];
+        return ['Full Name', 'Email Address', 'Status of Attendance'];
     }
 }
