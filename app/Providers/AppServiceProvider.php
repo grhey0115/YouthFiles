@@ -9,6 +9,7 @@ use Spatie\Health\Facades\Health;
 use Spatie\Health\Checks\Checks\OptimizedAppCheck;
 use Spatie\Health\Checks\Checks\DebugModeCheck;
 use Spatie\Health\Checks\Checks\EnvironmentCheck;
+use Illuminate\Support\Facades\Blade;
  
 
 class AppServiceProvider extends ServiceProvider
@@ -26,7 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-
+        Blade::component('filament::form', \Filament\Forms\Components\Form::class);
         Health::checks([
             OptimizedAppCheck::new(),
             DebugModeCheck::new(),

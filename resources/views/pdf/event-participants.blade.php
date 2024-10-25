@@ -73,10 +73,10 @@
     <tbody>
         @foreach ($participants as $participant)
         <tr>
-            <td>{{ $participant->name }}</td>
+            <td>{{ $participant->last_name }}, {{ $participant->first_name }} {{ $participant->middle_name ?? '' }}</td>
             <td>{{ $participant->email }}</td>
-            <td class="status-{{ $participant->pivot->attendance_status }}">
-                {{ ucfirst($participant->pivot->attendance_status) }}
+            <td class="status-{{ strtolower($participant->attendance_status) }}">
+                {{ ucfirst($participant->attendance_status) }}
             </td>
         </tr>
         @endforeach

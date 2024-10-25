@@ -22,6 +22,7 @@ class EventParticipantsExport implements FromCollection, WithHeadings
                 'Full Name' => "{$participant->last_name}, {$participant->first_name} {$participant->middle_name}", // Format LastName, FirstName MiddleName
                 'Email Address' => $participant->email,
                 'Status of Attendance' => $participant->pivot->attendance_status,
+                'Status of Attendance' => $participant->pivot->attendance_status,
             ];
         });
     }
