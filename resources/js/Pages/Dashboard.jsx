@@ -141,7 +141,7 @@ const Dashboard = () => {
                 placement="start"  // This moves the ribbon to the left side
                 >
                 <StyledCard>
-                    <img className="image" src={`/storage/${event.header_image}`} alt={event.name} />
+                <img className="image" src={`/storage/${event.header_image}`} alt={event.name} />
                     <div className="content">
                     <Link href={route('events.show', event.id)}>
                         <span className="title">{event.name}</span>

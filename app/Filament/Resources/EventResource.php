@@ -61,12 +61,14 @@ class EventResource extends Resource
                     ->label('Header Image')
                     ->image()
                     ->optimize('webp')
+                    ->directory('uploads/headers')
                     ->required(), // Adding file upload for header image
                 
                     Forms\Components\FileUpload::make('qr_code_image') // Add file upload for QR code
                     ->label('Gcash QR Code')
                     ->image() // Ensure that it's an image
                     ->optimize('webp')
+                    ->directory('uploads/gcashqr')
                     ->required(false), // Not mandatory
 
                     Forms\Components\TextInput::make('cancellation_days_before')
