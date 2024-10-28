@@ -2,39 +2,40 @@
 
 namespace App\Filament\Exports;
 
-use App\Models\AyudaApplicant;
-use Filament\Actions\Exports\ExportColumn;
-use Filament\Actions\Exports\Exporter;
-use Filament\Actions\Exports\Models\Export;
+use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class AssistanceApplicantExporter extends Exporter
+class AssistanceApplicantExporter implements FromCollection, WithHeadings
 {
-    protected static ?string $model = AyudaApplicant::class;
+    protected $applicants;
 
-    public static function getColumns(): array
+    public function __construct(Collection $applicants)
     {
-        return [
-            ExportColumn::make('user.first_name')->label('First Name'),
-            ExportColumn::make('user.last_name')->label('Last Name'),
-            ExportColumn::make('user.email')->label('Email'),
-            
-            // Assistance-specific columns
-            ExportColumn::make('status')->label('Status'),
-            ExportColumn::make('applied_at')->label('Applied At'),
-            
-            // Add more fields as needed, such as requirements or related data
-            // ExportColumn::make('requirements.some_field')->label('Requirement Field'),
-        ];
+        $this->applicants = $applicants;
     }
 
-    public static function getCompletedNotificationBody(Export $export): string
+    public function collection()
     {
-        $body = 'Your assistance applicant export has completed and ' . number_format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
+        return $this->applicants->map(function ($applicant) {
+            return [
+                'Applicant Name' => $applicant->user->last_name . ', ' . $applicant->user->first_name,
+                'Status' => $applicant->status,
+                'Aid Received' => $applicant->aid_received,
+                'Payment Method' => $applicant->payment_method,
+                'Payment Status' => $applicant->payment_status,
+            ];
+        });
+    }
 
-        if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
-        }
-
-        return $body;
+    public function headings(): array
+    {
+        return [
+            'Applicant Name',
+            'Status',
+            'Aid Received',
+            'Payment Method',
+            'Payment Status',
+        ];
     }
 }

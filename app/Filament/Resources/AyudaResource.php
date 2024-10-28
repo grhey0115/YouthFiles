@@ -23,7 +23,7 @@ class AyudaResource extends Resource
 {
     protected static ?string $model = Ayuda::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-heart';
     protected static ?string $navigationLabel = 'Assistance';
     protected static ?string $navigationGroup = 'Ayuda';
 

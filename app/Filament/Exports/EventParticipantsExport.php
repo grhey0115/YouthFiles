@@ -21,7 +21,8 @@ class EventParticipantsExport implements FromCollection, WithHeadings
             return [
                 'Full Name' => "{$participant->last_name}, {$participant->first_name} {$participant->middle_name}", // Format LastName, FirstName MiddleName
                 'Email Address' => $participant->email,
-                'Status of Attendance' => $participant->pivot->attendance_status,
+                // Check if pivot property exists before accessing it
+               'Status of Attendance' => $participant->attendance_status ?? 'N/A',// Default to 'N/A' if pivot is not set
             ];
         });
     }
