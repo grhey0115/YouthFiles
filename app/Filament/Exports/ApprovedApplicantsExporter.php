@@ -2,74 +2,40 @@
 
 namespace App\Filament\Exports;
 
-use Filament\Actions\Exports\ExportColumn;
-use Filament\Actions\Exports\Exporter;
-use Filament\Actions\Exports\Models\Export;
 use Illuminate\Support\Collection;
-use App\Models\AyudaApplicant;
+use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\WithHeadings;
 
-class ApprovedApplicantsExporter extends Exporter
+class ApprovedApplicantsExporter implements FromCollection, WithHeadings
 {
-    protected array $columns;
-    protected ?Collection $data = null;
-    protected string $filename = 'approved_applicants.xlsx';
+    protected $applicants;
 
-    // Setter method for columns
-    public function setColumns(array $columns): self
+    public function __construct(Collection $applicants)
     {
-        $this->columns = $columns;
-        return $this;
+        $this->applicants = $applicants;
     }
 
-    // Setter method for data (query or collection)
-    public function setData($data): self
+    public function collection()
     {
-        $this->data = $data;
-        return $this;
+        return $this->applicants->map(function ($applicant) {
+            return [
+                'Applicant Name' => $applicant->user->last_name . ', ' . $applicant->user->first_name,
+                'Aid Received' => $applicant->aid_received,
+                'Payment Method' => $applicant->payment_method,
+                'Payment Status' => $applicant->payment_status,
+                'Assistance Received' => $applicant->assistance_received,
+            ];
+        });
     }
 
-    // Setter method for filename
-    public function setFilename(string $filename): self
-    {
-        $this->filename = $filename;
-        return $this;
-    }
-
-    public static function getColumns(): array
+    public function headings(): array
     {
         return [
-            ExportColumn::make('user.first_name')->label('First Name'),
-            ExportColumn::make('user.last_name')->label('Last Name'),
-            ExportColumn::make('user.email')->label('Email'),
-            ExportColumn::make('aid_received')->label('Aid Received'),
-            ExportColumn::make('payment_method')->label('Payment Method'),
-            ExportColumn::make('payment_status')->label('Payment Status'),
-            ExportColumn::make('assistance_received')->label('Assistance Received'),
-            ExportColumn::make('applied_at')->label('Applied At'),
+            'Applicant Name',
+            'Aid Received',
+            'Payment Method',
+            'Payment Status',
+            'Assistance Received',
         ];
-    }
-
-    public static function getCompletedNotificationBody(Export $export): string
-    {
-        $body = 'Your approved applicants export has completed, and ' . number_format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
-
-        if ($failedRowsCount = $export->getFailedRowsCount()) {
-            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
-        }
-
-        return $body;
-    }
-
-    public function query()
-    {
-        return $this->data instanceof Collection
-            ? AyudaApplicant::query()->whereIn('id', $this->data->pluck('id'))
-            : AyudaApplicant::query()->where('status', 'approved');
-    }
-
-    public function download(): \Symfony\Component\HttpFoundation\StreamedResponse
-    {
-        // Pass columns and data to the parent download method
-        return parent::download($this->filename, $this->columns, $this->query());
     }
 }

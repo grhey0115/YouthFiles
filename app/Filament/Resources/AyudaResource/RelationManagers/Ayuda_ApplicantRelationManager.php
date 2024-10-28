@@ -19,11 +19,14 @@ use Filament\Tables\Actions\Exports\Enums\ExportFormat;
 use Illuminate\Support\Collection;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use pxlrbt\FilamentExcel\Columns\Column;
-use Barryvdh\DomPDF\Facade as PDF;
 use Filament\Tables\Actions\ExportAction;
 use App\Filament\Exports\AssistanceApplicantExporter;
 use Filament\Tables\Actions\BulkActionGroup;
 use Filament\Tables\Actions\ExportBulkAction;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Tables\Actions\Action;
+use Filament\Forms\Components\Select;
+use Maatwebsite\Excel\Facades\Excel;
 
 
 
@@ -143,12 +146,56 @@ class Ayuda_ApplicantRelationManager extends RelationManager
 
         ->bulkActions([
             BulkActionGroup::make([
-                ExportBulkAction::make()->label('Export Selected')->exporter(AssistanceApplicantExporter::class),
+                
             ]),
         ])
         ->headerActions([
-            ExportAction::make()->exporter(AssistanceApplicantExporter::class),
-        ]);
+            Action::make('export')
+            ->label('Export Applicants')
+            ->form([
+                Select::make('format')
+                    ->label('Export Format')
+                    ->options([
+                        'csv' => 'CSV',
+                        'excel' => 'Excel',
+                        'pdf' => 'PDF',
+                    ])
+                    ->required(),
+            ])
+            ->action(function (array $data) {
+                $ayuda = $this->ownerRecord;  // Get the current Ayuda (assistance) record
+                
+                // Filter out applicants who have status 'approved'
+                $applicants = $ayuda->applicants()->where('status', '!=', 'approved')->get();  
+                
+                $format = $data['format'];
+                $fileName = 'assistance-applicants-' . $ayuda->title . '.' . ($format === 'excel' ? 'xlsx' : $format);
+
+                if ($format === 'pdf') {
+                    // Generate PDF
+                    $pdf = Pdf::loadView('pdf.assistance-applicants', [
+                        'applicants' => $applicants,
+                        'ayuda' => $ayuda, // Pass the ayuda record for context
+                    ])->setPaper('a4', 'landscape');
+
+                    // Return the PDF file for download (will trigger Save As prompt)
+                    return response()->streamDownload(
+                        fn () => print($pdf->output()),
+                        $fileName
+                    );
+                } elseif ($format === 'excel') {
+                    // Generate Excel and prompt Save As
+                    return Excel::download(new AssistanceApplicantExporter($applicants), $fileName);
+                } elseif ($format === 'csv') {
+                    // Generate CSV and prompt Save As
+                    return Excel::download(new AssistanceApplicantExporter($applicants), $fileName, \Maatwebsite\Excel\Excel::CSV);
+                }
+            })
+            ->modalHeading('Export Assistance Applicants')
+            ->modalButton('Export'),
+    ]);
+           
+       
 }
    
     // Modal action for viewing uploaded files
@@ -169,17 +216,7 @@ class Ayuda_ApplicantRelationManager extends RelationManager
     {
         return static::getModel()::count();
     }
-    public static function generatePDF()
-    {
-        // Get all applicants from the database
-        $applicants = AyudaApplicant::all();
-
-        // Generate the PDF
-        $pdf = PDF::loadView('pdf.applicants_report', compact('applicants'));
-
-        // Return the generated PDF to download
-        return $pdf->download('applicants_report.pdf');
-    }
+  
     public static function getEloquentQuery(): Builder
     {
         return AyudaApplicant::query()->with(['user', 'requirements']);
