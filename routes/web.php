@@ -81,7 +81,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/ayudas/{id}/apply', [AyudaController::class, 'apply'])->name('ayudas.apply');
     Route::post('/ayudas/{id}/cancel', [AyudaController::class, 'cancel'])->name('ayudas.cancel');
     Route::get('/users/{user}/ayuda-history', [UserAyudaHistoryController::class, 'show'])->name('user.ayuda.history');
-  
+    Route::post('/ayudas/{ayuda}/donate', [AyudaController::class, 'donate'])->name('ayudas.donate');
+    Route::post('/ayudas/{ayuda}/volunteer', [AyudaController::class, 'volunteer'])->name('ayudas.volunteer');
+
+
+
     Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
     Route::get('/projects/{id}', [ProjectController::class, 'show'])->name('projects.show');
 

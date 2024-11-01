@@ -16,4 +16,5 @@ class ViewAyuda extends ViewRecord
             Actions\EditAction::make(),
         ];
     }
+    
 }

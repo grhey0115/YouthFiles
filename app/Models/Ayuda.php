@@ -28,13 +28,18 @@ class Ayuda extends Model
         'assistance_type',         // Type of assistance (e.g., cash, education, livelihood)
         'status',                 // Status (e.g., Open, In Progress, Closed)
         'requirements_needed',    // Whether requirements are needed (yes/no)
-        'requirements_file',      // Path to the file for required documents
+        'requirements_file',
+        'needs_donations',
+        'needs_volunteers',      // Path to the file for required documents
     ];
     protected $casts = [
         'filter' => 'array',
         'official_in_charge' => 'array',
         'date_start' => 'datetime',
         'date_end' => 'datetime',
+        'needs_donations' => 'boolean',
+        'needs_volunteers' => 'boolean',
+        'assistance_type' => 'array',
     ];
 
 
@@ -79,4 +84,32 @@ class Ayuda extends Model
     {
         return $this->hasMany(Requirement::class);
     }
+    
+
+    public function volunteerOpportunities()
+    {
+        return $this->hasMany(VolunteerOpportunity::class);
+    }
+    public function volunteerApplications()
+    {
+        return $this->hasMany(VolunteerApplication::class);
+    }
+    // Computed attribute for total amount raised
+    public function getTotalAmountRaisedAttribute(): int
+    {
+        return $this->donations()->sum('amount');
+    }
+    public function userDonations()
+    {
+        return $this->hasMany(UserDonation::class);
+    }
+    public function acceptedVolunteers()
+    {
+        return $this->hasMany(AcceptedVolunteer::class);
+    }
+    public function donations()
+    {
+        return $this->hasMany(Donation::class, 'ayuda_id');
+    }
+    
 }

@@ -10,6 +10,7 @@ use Spatie\Health\Checks\Checks\OptimizedAppCheck;
 use Spatie\Health\Checks\Checks\DebugModeCheck;
 use Spatie\Health\Checks\Checks\EnvironmentCheck;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Storage;
  
 
 class AppServiceProvider extends ServiceProvider

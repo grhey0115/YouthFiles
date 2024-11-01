@@ -6,6 +6,12 @@ use App\Models\Ayuda;
 use App\Models\User;
 use App\Models\AyudaApplicant;
 use App\Models\AyudaApplicantFile;
+use App\Models\UserDonation;
+use App\Models\Donation;
+use App\Models\VolunteerOpportunity;
+use App\Models\VolunteerApplication;
+
+
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
@@ -33,28 +39,40 @@ class AyudaController extends Controller
             }
 
 
-    public function show($id)
-    {
-        // Fetch the Ayuda with its requirements
-        $ayuda = Ayuda::with('requirements')->findOrFail($id);
-        
-        // Get the currently authenticated user
-        $authUser = Auth::user();
-    
-        // Fetch the AyudaApplicant for the current user, if it exists
-        $ayudaApplicant = AyudaApplicant::where('ayuda_id', $ayuda->id)
-                                        ->where('user_id', $authUser->id)
-                                        ->first();
-    
-        // Pass applicant data including assistance_received status to Inertia
-        return Inertia::render('AyudaShow', [
-            'ayuda' => $ayuda,  // Pass the Ayuda details
-            'auth' => $authUser,  // Pass the authenticated user
-            'ayudaApplicant' => $ayudaApplicant,  // Pass the applicant's status
-            'assistanceReceived' => $ayudaApplicant ? $ayudaApplicant->assistance_received : false,  // Pass the assistance_received status
-        ]);
-    
-    }
+            public function show($id)
+            {
+                $ayuda = Ayuda::with([
+                    'requirements',
+                    'donations', // Make sure this relationship is loaded
+                    'volunteerOpportunities',
+                    'volunteerApplications' => function($query) {
+                        $query->where('user_id', auth()->id());
+                    }
+                ])->findOrFail($id);
+
+                // Debug the donations
+                \Log::info('Ayuda donations:', ['donations' => $ayuda->donations]);
+
+                $authUser = Auth::user();
+                $ayudaApplicant = AyudaApplicant::where('ayuda_id', $ayuda->id)
+                                                ->where('user_id', $authUser->id)
+                                                ->first();
+
+                return Inertia::render('AyudaShow', [
+                    'ayuda' => array_merge($ayuda->toArray(), [
+                        'donations' => $ayuda->donations, // Explicitly include donations
+                    ]),
+                    'auth' => $authUser,
+                    'ayudaApplicant' => $ayudaApplicant,
+                    'assistanceReceived' => $ayudaApplicant ? $ayudaApplicant->assistance_received : false,
+                    'volunteerOpportunities' => $ayuda->volunteerOpportunities,
+                    'userApplications' => $ayuda->volunteerApplications,
+                    'donationType' => $ayuda->donations->first() ? $ayuda->donations->first()->donation_type : 'money',
+                    'needsDonations' => $ayuda->needs_donations,
+                    'needsVolunteer' => $ayuda->needs_volunteers,
+                ]);
+            }
+
     public function approveApplicant($applicantId)
     {
         // Find the applicant
@@ -222,4 +240,64 @@ class AyudaController extends Controller
 
         return redirect()->back()->with('error', 'Applicant not found.');
     }
+   // DonationController.php
+   public function donate(Request $request, $id)
+   {
+       // No need for try-catch here; let Laravel handle exceptions
+       // Validate the request
+       $validated = $request->validate([
+           'donation_id' => 'required|exists:donations,id',
+           'donation_type' => 'required|in:money',
+           'amount' => 'required|numeric|min:1',
+           'reference_number' => 'required|string',
+          
+       ]);
+   
+       // Proceed with storing the donation
+       $donation = Donation::findOrFail($validated['donation_id']);
+       $receiptPath = $request->hasFile('receipt')
+           ? $request->file('receipt')->store('donation_receipts', 'public')
+           : null;
+   
+       UserDonation::create([
+           'user_id' => auth()->id(),
+           'donation_id' => $donation->id,
+           'ayuda_id' => $id,
+           'donation_type' => $validated['donation_type'],
+           'amount' => $validated['amount'],
+           'reference_number' => $validated['reference_number'],
+           'status' => 'pending',
+       ]);
+   
+       return redirect()->back()->with('success', 'Donation submitted successfully! Waiting for approval.');
+   }
+
+public function volunteer(Request $request, $id)
+{
+    $request->validate([
+        'volunteer_opportunity_id' => 'required|exists:volunteer_opportunities,id',
+        'notes' => 'nullable|string'
+    ]);
+
+    // Check if user has already applied for this opportunity
+    $existingApplication = VolunteerApplication::where([
+        'user_id' => auth()->id(),
+        'ayuda_id' => $id,
+        'volunteer_opportunity_id' => $request->volunteer_opportunity_id
+    ])->exists();
+
+    if ($existingApplication) {
+        return redirect()->back()->with('error', 'You have already applied for this volunteer position.');
+    }
+
+    $application = VolunteerApplication::create([
+        'user_id' => auth()->id(),
+        'ayuda_id' => $id,
+        'volunteer_opportunity_id' => $request->volunteer_opportunity_id,
+        'status' => 'pending',
+        'notes' => $request->notes
+    ]);
+
+    return redirect()->back()->with('success', 'Volunteer application submitted successfully!');
+}
 }
