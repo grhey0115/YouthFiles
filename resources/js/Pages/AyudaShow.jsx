@@ -1,20 +1,36 @@
 import { useState, useEffect } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Upload, Button, message, Layout, Card, Row, Col, Typography, Image, Divider, Space, Tag, Alert } from 'antd';
-import { UploadOutlined, FileDoneOutlined, CheckCircleOutlined, ExclamationCircleOutlined, InfoCircleOutlined } from '@ant-design/icons';
+import { 
+  Upload, Button, message, Layout, Card, Row, Col, Select, Typography, Image, Divider, Space, Tag, Alert, InputNumber, Modal, Input 
+} from 'antd';
+import { 
+  UploadOutlined, FileDoneOutlined, CheckCircleOutlined, PlusOutlined, ExclamationCircleOutlined, InfoCircleOutlined, DollarCircleOutlined, HeartOutlined 
+} from '@ant-design/icons';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
-const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived }) => {
-  const { post, data, setData, errors } = useForm({
+const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonations, needsVolunteer }) => {
+  // Initialize form data using useForm
+  const { data, setData, post, errors, processing } = useForm({
     files: {},
+    donation_id: '',
+    donation_type: 'money',
+    amount: '',
+    reference_number: '',
+    receipt: null,
   });
 
   const [filePreviews, setFilePreviews] = useState({});
   const [applicationStatus, setApplicationStatus] = useState(ayudaApplicant?.status || 'not_applied');
   const [assistanceReceivedState, setAssistanceReceivedState] = useState(ayudaApplicant?.assistance_received || false);
+  const [isDonationModalVisible, setDonationModalVisible] = useState(false);
+  const [fileList, setFileList] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  const [isVolunteerModalVisible, setVolunteerModalVisible] = useState(false);
+  const [volunteerNotes, setVolunteerNotes] = useState('');
 
   useEffect(() => {
     if (ayudaApplicant?.status && ayudaApplicant?.status !== applicationStatus) {
@@ -46,18 +62,6 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived }) => {
     });
   };
 
-  const handleCancel = () => {
-    post(route('ayudas.cancel', ayuda.id), {
-      onSuccess: () => {
-        setApplicationStatus(null);
-        message.info('Application canceled.');
-      },
-      onError: () => {
-        message.error('Failed to cancel application.');
-      },
-    });
-  };
-
   const handleFileChange = (requirementId, file) => {
     setData('files', { ...data.files, [requirementId]: file });
 
@@ -68,87 +72,133 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived }) => {
     if (file) reader.readAsDataURL(file);
   };
 
-  const renderActionButton = () => {
-    if (assistanceReceived === 'received') {
-      return (
-        <Button type="primary" disabled icon={<FileDoneOutlined />} style={{ width: '100%' }}>
-          Assistance Received
-        </Button>
-      );
-    } else if (applicationStatus === 'pending') {
-      return (
-        <Button type="primary" danger onClick={handleCancel} icon={<ExclamationCircleOutlined />} style={{ width: '100%' }}>
-          Pending Approval (Cancel Application)
-        </Button>
-      );
-    } else if (applicationStatus === 'approved') {
-      return (
-        <Button type="primary" disabled icon={<CheckCircleOutlined />} style={{ width: '100%' }}>
-          Application Approved (Wait for Announcement)
-        </Button>
-      );
-    } else {
-      return (
-        <Button type="primary" onClick={handleApply} icon={<UploadOutlined />} style={{ width: '100%' }}>
-          Apply for Ayuda
-        </Button>
-      );
-    }
-  };
-
-  const handleMarkAssistanceReceived = () => {
-    if (applicationStatus !== 'approved') {
-      message.error('You can only mark assistance as received once your application is approved.');
+  const handleDonate = () => {
+    if (!data.amount) {
+      message.error('Please enter donation amount');
       return;
     }
-
-    post(route('ayudas.markAssistanceReceived', ayuda.id), {
+  
+    if (!data.reference_number) {
+      message.error('Please enter reference number');
+      return;
+    }
+  
+    if (!ayuda?.donations?.[0]?.id) {
+      message.error('Invalid donation configuration');
+      return;
+    }
+  
+    // Set 'donation_id' and 'donation_type' in 'data'
+    setData({
+      ...data,
+      donation_id: ayuda.donations[0].id,
+      donation_type: 'money',
+    });
+  
+    // Log data to verify
+    console.log('Form data before submission:', data);
+  
+    post(route('ayudas.donate', ayuda.id), {
+      forceFormData: true,
       onSuccess: () => {
-        setApplicationStatus('assistance_received');
-        setAssistanceReceivedState(true);
-        message.success('Assistance received successfully.');
+        setDonationModalVisible(false);
+        message.success('Donation submitted successfully! Waiting for approval.');
+        resetForm();
       },
-      onError: () => {
-        message.error('Failed to mark assistance as received.');
+      onError: (errors) => {
+        console.error('Donation submission error:', errors);
+        if (errors.donation_id) {
+          message.error(errors.donation_id[0]);
+        } else {
+          message.error('Failed to submit donation');
+        }
+      },
+      onFinish: () => {
+        setIsSubmitting(false);
       },
     });
   };
 
-  if (!ayuda) {
-    return <div>Loading Ayuda details...</div>;
+  const resetForm = () => {
+    setData({
+      ...data,
+      amount: '',
+      reference_number: '',
+      receipt: null,
+    });
+    setFileList([]);
+  };
+
+  const handleReceiptChange = ({ fileList }) => {
+    setFileList(fileList);
+    const file = fileList[0];
+    if (file) {
+      setData('receipt', file.originFileObj);
+    } else {
+      setData('receipt', null);
+    }
+  };
+
+
+
+const handleVolunteer = () => {
+  if (!selectedOpportunity) {
+    message.error('Please select a volunteer position');
+    return;
   }
+
+  Inertia.post(route('ayudas.volunteer', ayuda.id), {
+    volunteer_opportunity_id: selectedOpportunity,
+    notes: volunteerNotes,
+  }, {
+    onSuccess: () => {
+      message.success('Volunteer application submitted successfully!');
+      setVolunteerModalVisible(false);
+      // Reset form fields if necessary
+      setSelectedOpportunity(null);
+      setVolunteerNotes('');
+    },
+    onError: (errors) => {
+      console.error('Volunteer submission error:', errors);
+      message.error('Failed to submit volunteer application.');
+    },
+  });
+};
+
+
+  const renderActionButton = () => {
+    if (assistanceReceivedState) {
+      return <Button type="primary" disabled icon={<FileDoneOutlined />} style={{ width: '100%' }}>Assistance Received</Button>;
+    }
+    if (applicationStatus === 'pending') {
+      return <Button type="primary" danger icon={<ExclamationCircleOutlined />} style={{ width: '100%' }}>Pending Approval</Button>;
+    }
+    if (applicationStatus === 'approved') {
+      return <Button type="primary" disabled icon={<CheckCircleOutlined />} style={{ width: '100%' }}>Application Approved</Button>;
+    }
+    return <Button type="primary" onClick={handleApply} icon={<UploadOutlined />} style={{ width: '100%' }}>Apply for Ayuda</Button>;
+  };
 
   return (
     <AuthenticatedLayout user={auth} header={<Title level={2}>Ayuda Details</Title>}>
       <Head title={ayuda?.title || 'Ayuda Details'} />
 
       <Layout.Content className="container mx-auto p-4">
-        {/* Ayuda Banner */}
         <Card bordered={false} style={{ marginBottom: '24px', backgroundColor: '#f0f2f5' }}>
-          <Image
-            src={`/storage/${ayuda?.header || 'default-banner.jpg'}`}
-            alt="Ayuda Banner"
-            width="100%"
-            height={300}
-            style={{ objectFit: 'cover', borderRadius: '8px' }}
-          />
+          <Image src={`/storage/${ayuda?.header || 'default-banner.jpg'}`} alt="Ayuda Banner" width="100%" height={300} style={{ objectFit: 'cover', borderRadius: '8px' }} />
         </Card>
 
-        {/* Ayuda Details and Application */}
         <Card bordered={false} style={{ padding: '24px', borderRadius: '8px' }}>
           <Row gutter={[24, 24]}>
-            {/* Ayuda Information */}
             <Col xs={24} md={16}>
-              <Title level={3} style={{ marginBottom: '16px' }}>{ayuda?.title || 'No Title'}</Title>
-
+              <Title level={3}>{ayuda?.title || 'No Title'}</Title>
               <Space direction="vertical" size="middle" style={{ display: 'flex' }}>
-                <Text><strong>Start Date:</strong> {ayuda?.date_start ? new Date(ayuda.date_start).toLocaleDateString() : 'N/A'}</Text>
-                <Text><strong>End Date:</strong> {ayuda?.date_end ? new Date(ayuda.date_end).toLocaleDateString() : 'N/A'}</Text>
+                <Text><strong>Start Date:</strong> {new Date(ayuda.date_start).toLocaleDateString()}</Text>
+                <Text><strong>End Date:</strong> {new Date(ayuda.date_end).toLocaleDateString()}</Text>
                 <Text><strong>Sector:</strong> {ayuda?.sector || 'N/A'}</Text>
                 <Text><strong>Filter:</strong> {ayuda?.filter || 'N/A'}</Text>
                 <Text><strong>Requirements Needed:</strong> {ayuda?.requirements && ayuda.requirements.length > 0 ? 'Yes' : 'No'}</Text>
               </Space>
-
               <Divider />
 
               <Title level={4}>Upload Requirements</Title>
@@ -199,7 +249,7 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived }) => {
               )}
             </Col>
 
-            {/* Application Action Button */}
+            {/* Application Status and Action Button */}
             <Col xs={24} md={8}>
               <Card style={{ textAlign: 'center', borderRadius: '8px', backgroundColor: '#fafafa' }}>
                 <Title level={4}>Application Status</Title>
@@ -216,6 +266,109 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived }) => {
                 <div style={{ marginTop: '24px' }}>
                   {renderActionButton()}
                 </div>
+
+                {/* Donation Section */}
+                <Divider />
+                <Title level={4}>Donate to this Program</Title>
+                <Text>Goal: {ayuda?.donation_goal} | Raised: {ayuda?.donation_raised}</Text>
+                <Button 
+                  type="primary" 
+                  icon={<DollarCircleOutlined />} 
+                  onClick={() => setDonationModalVisible(true)} 
+                  disabled={!needsDonations}
+                >
+                  Donate Now
+                </Button>
+                <Modal
+                  title="Make a Donation"
+                  open={isDonationModalVisible}
+                  onCancel={() => setDonationModalVisible(false)}
+                  footer={[
+                    <Button key="cancel" onClick={() => setDonationModalVisible(false)}>
+                      Cancel
+                    </Button>,
+                    <Button
+                      key="submit"
+                      type="primary"
+                      onClick={handleDonate}
+                      loading={isSubmitting}
+                      disabled={!data.amount || !data.reference_number || isSubmitting}
+                    >
+                      Confirm Donation
+                    </Button>,
+                  ]}
+                >
+                  {/* ... */}
+                  <InputNumber
+                    placeholder="Enter Donation Amount"
+                    value={data.amount}
+                    onChange={(value) => setData('amount', value)}
+                    min={1}
+                    className="mb-4 w-full"
+                    formatter={(value) => `₱ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    parser={(value) => value.replace(/₱\s?|(,*)/g, '')}
+                  />
+
+                  <Input
+                    placeholder="Enter GCash Reference Number"
+                    value={data.reference_number}
+                    onChange={(e) => setData('reference_number', e.target.value)}
+                    className="mb-4"
+                  />
+
+                  <Upload
+                    listType="picture-card"
+                    fileList={fileList}
+                    onChange={handleReceiptChange}
+                    beforeUpload={() => false}
+                  >
+                    {fileList.length >= 1 ? null : (
+                      <div>
+                        <PlusOutlined />
+                        <div className="mt-2">Upload Receipt</div>
+                      </div>
+                    )}
+                  </Upload>
+                </Modal>
+
+                {/* Volunteer Section */}
+                <Divider />
+                <Title level={4}>Volunteer for this Program</Title>
+                <Text>{ayuda?.volunteer_slots} slots available</Text>
+                <Button 
+                  type="primary" 
+                  icon={<HeartOutlined />} 
+                  onClick={() => setVolunteerModalVisible(true)} 
+                  disabled={!needsVolunteer}
+                >
+                  Sign Up to Volunteer
+                </Button>
+                <Modal
+                  title="Volunteer Application"
+                  open={isVolunteerModalVisible}
+                  onCancel={() => setVolunteerModalVisible(false)}
+                  onOk={handleVolunteer}
+                >
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    <Select
+                      style={{ width: '100%' }}
+                      placeholder="Select a volunteer position"
+                      onChange={(value) => setSelectedOpportunity(value)}
+                    >
+                      {ayuda?.volunteerOpportunities?.map(opportunity => (
+                        <Select.Option key={opportunity.id} value={opportunity.id}>
+                          {opportunity.role_title} ({opportunity.slots} slots)
+                        </Select.Option>
+                      ))}
+                    </Select>
+                    <Input.TextArea
+                      placeholder="Why would you like to volunteer? (Optional)"
+                      value={volunteerNotes}
+                      onChange={(e) => setVolunteerNotes(e.target.value)}
+                      rows={4}
+                    />
+                  </Space>
+                </Modal>
               </Card>
             </Col>
           </Row>
