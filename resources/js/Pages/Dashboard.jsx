@@ -1,12 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Row, Col, Pagination, Empty, Tabs, Badge } from 'antd'; // Import Badge component from Ant Design
+import { Tabs, Pagination, Badge } from 'antd';
 import styled from 'styled-components';
 import ErrorBoundary from '@/Components/ErrorBoundary';
 
-// Styled component for event cards
 const StyledCard = styled.div`
   max-width: 300px;
   border-radius: 0.5rem;
@@ -16,7 +15,7 @@ const StyledCard = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  position: relative;  // For badge positioning
+  position: relative;
 
   .image {
     width: 100%;
@@ -61,118 +60,139 @@ const StyledCard = styled.div`
     cursor: pointer;
   }
 
-  .action span {
-    transition: .3s ease;
-  }
-
-  .action:hover span {
-    transform: translateX(4px);
+  .action:hover {
+    background-color: #1d4ed8;
   }
 `;
 
+const StyledPaginationContainer = styled.div`
+  position: fixed;
+  bottom: 20px; /* Distance from the bottom of the viewport */
+  right: 20px; /* Distance from the right of the viewport */
+  z-index: 1000; /* Ensure it appears above other elements */
+
+  /* Optional: Adjust for smaller screens */
+  @media (max-width: 768px) {
+    right: 10px;
+    bottom: 10px;
+  }
+`;
 const Dashboard = () => {
   const { events } = usePage().props;
-  const [currentPage, setCurrentPage] = useState(1);
-  const [eventsPerPage, setEventsPerPage] = useState(6);
-  const [activeTab, setActiveTab] = useState('upcoming');
+  const [activeTab, setActiveTab] = useState("upcoming");
+  const [upcomingPage, setUpcomingPage] = useState(1);
+  const [pastPage, setPastPage] = useState(1);
+  const itemsPerPage = 8;
 
-  useEffect(() => {
-    const updateEventsPerPage = () => {
-      if (window.innerWidth >= 1200) {
-        setEventsPerPage(12);
-      } else if (window.innerWidth >= 768) {
-        setEventsPerPage(8);
-      } else {
-        setEventsPerPage(4);
-      }
-    };
-
-    window.addEventListener('resize', updateEventsPerPage);
-    updateEventsPerPage(); // Call initially to set the correct value
-
-    return () => window.removeEventListener('resize', updateEventsPerPage);
-  }, []);
-
-  const indexOfLastEvent = currentPage * eventsPerPage;
-  const indexOfFirstEvent = indexOfLastEvent - eventsPerPage;
-
-  // Filter events based on their status
-  const filteredEvents = events.filter((event) => {
-    if (activeTab === 'upcoming') return event.status === 'published';
-    if (activeTab === 'past') return event.status === 'ended';
-    return false;
-  });
-
-  const currentEvents = filteredEvents.slice(indexOfFirstEvent, indexOfLastEvent);
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
+  const handleTabChange = (key) => {
+    setActiveTab(key);
   };
 
-  const tabItems = [
-    { key: 'upcoming', label: 'Upcoming Events' },
-    { key: 'past', label: 'Past Events' },
-  ];
+  const filterEvents = (status) => {
+    const today = new Date();
+
+    if (status === "upcoming") {
+      return events.filter((event) => {
+        const eventDate = new Date(event.event_date);
+        return event.status === "published" && eventDate >= today;
+      });
+    }
+
+    if (status === "past") {
+      return events.filter((event) => {
+        const eventDate = new Date(event.event_date);
+        return event.status === "ended" || eventDate < today;
+      });
+    }
+
+    return [];
+  };
+
+  const paginateEvents = (filteredEvents, currentPage) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredEvents.slice(startIndex, endIndex);
+  };
+
+  const renderEvents = (filteredEvents) => {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        {filteredEvents.map((event) => (
+          <Badge.Ribbon
+            key={event.id}
+            text={event.available_slots > 0 ? `${event.available_slots} Slots Left` : "Full"}
+            color={event.available_slots > 0 ? "green" : "red"}
+            placement="start"
+          >
+            <StyledCard>
+              <img className="image" src={`/storage/${event.header_image}`} alt={event.name} />
+              <div className="content">
+                <h3 className="title">{event.name}</h3>
+                <p className="desc">
+                  <strong>When:</strong> {new Date(event.event_date).toLocaleDateString()}
+                  <br />
+                  <strong>Where:</strong> {event.location || "Online"}
+                </p>
+                <Link href={route("events.show", event.id)} className="action">
+                  View Event
+                </Link>
+              </div>
+            </StyledCard>
+          </Badge.Ribbon>
+        ))}
+      </div>
+    );
+  };
+
+  const upcomingEvents = filterEvents("upcoming");
+  const pastEvents = filterEvents("past");
 
   return (
     <ErrorBoundary>
-    <AuthenticatedLayout user={usePage().props.auth}>
- 
-      <Head title="Dashboard" />
+      <AuthenticatedLayout user={usePage().props.auth}>
+        <Head title="Dashboard" />
 
-      {/* Centered top navigation tabs with pill style */}
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '16px' }}>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems}
-          type="card"
-          centered
-        />
-      </div>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
+          <Tabs
+            defaultActiveKey="upcoming"
+            activeKey={activeTab}
+            onChange={handleTabChange}
+            centered
+            items={[
+              {
+                key: "upcoming",
+                label: "Upcoming Events",
+                children: renderEvents(paginateEvents(upcomingEvents, upcomingPage)),
+              },
+              {
+                key: "past",
+                label: "Past Events",
+                children: renderEvents(paginateEvents(pastEvents, pastPage)),
+              },
+            ]}
+          />
+        </div>
 
-      <Row gutter={[16, 16]}>
-        {currentEvents.length > 0 ? (
-          currentEvents.map((event) => (
-            <Col xs={24} sm={12} md={8} lg={6} key={event.id}>
-             <Badge.Ribbon
-                text={event.available_slots > 0 ? `${event.available_slots} Slots Left` : 'Full'}
-                color={event.available_slots > 0 ? 'green' : 'red'}
-                placement="start"  // This moves the ribbon to the left side
-                >
-                <StyledCard>
-                <img className="image" src={`/storage/${event.header_image}`} alt={event.name} />
-                    <div className="content">
-                    <Link href={route('events.show', event.id)}>
-                        <span className="title">{event.name}</span>
-                    </Link>
-                    <p className="desc">{event.description}</p>
-                    <Link className="action" href={route('events.show', event.id)}>
-                        View Event <span aria-hidden="true">→</span>
-                    </Link>
-                    </div>
-                </StyledCard>
-                </Badge.Ribbon>
-
-            </Col>
-          ))
-        ) : (
-          <Col span={24}>
-            <Empty description="No events found." />
-          </Col>
-        )}
-      </Row>
-
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
-        <Pagination
-          current={currentPage}
-          pageSize={eventsPerPage}
-          total={filteredEvents.length}
-          onChange={handlePageChange}
-          showSizeChanger={false}
-        />
-      </div>
-    </AuthenticatedLayout>
+        <StyledPaginationContainer>
+          {activeTab === "upcoming" ? (
+            <Pagination
+              current={upcomingPage}
+              pageSize={itemsPerPage}
+              total={upcomingEvents.length}
+              onChange={setUpcomingPage}
+              showSizeChanger={false}
+            />
+          ) : (
+            <Pagination
+              current={pastPage}
+              pageSize={itemsPerPage}
+              total={pastEvents.length}
+              onChange={setPastPage}
+              showSizeChanger={false}
+            />
+          )}
+        </StyledPaginationContainer>
+      </AuthenticatedLayout>
     </ErrorBoundary>
   );
 };

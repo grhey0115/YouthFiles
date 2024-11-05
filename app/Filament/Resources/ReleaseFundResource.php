@@ -21,7 +21,7 @@ use Filament\Tables\Actions\Action;
 class ReleaseFundResource extends Resource
 {
     protected static ?string $model = ReleaseFund::class;
-
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?string $navigationGroup = 'Fund Management';
 

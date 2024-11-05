@@ -89,7 +89,7 @@ const StyledPaginationContainer = styled.div`
 const Ayuda = () => {
   const { openAyudas, closedAyudas } = usePage().props;  // Get filtered open and closed ayudas
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(4);  // Adjust items per page
+  const [itemsPerPage] = useState(8);  // Adjust items per page
 
   // Handle pagination for the rendered assistance data
   const handlePaginationChange = (page) => {
@@ -125,7 +125,7 @@ const Ayuda = () => {
                   />
                   <div className="content">
                     <h3 className="title">{ayuda.title}</h3>
-                    <p className="desc">{ayuda.filter}</p>
+                    <p className="desc">{ayuda.description}</p>
                     <Link
                       href={route('ayuda.show', ayuda.id)}
                       className="action"

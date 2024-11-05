@@ -261,116 +261,97 @@ class AyudaResource extends Resource
             ]);
     }
     public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist
-            ->schema([
-                Section::make('Basic Information')
-                    ->schema([
-                        ImageEntry::make('header')
-                            ->label('Header Image')
-                            ->size(400),
-                        TextEntry::make('title')
-                            ->label('Title'),
-                        TextEntry::make('description')
-                            ->label('Program Description')
-                            ->markdown(),
-                        TextEntry::make('sector')
-                            ->label('Sector')
-                            ->badge(),
-                        TextEntry::make('status')
-                            ->label('Status')
-                            ->badge()
-                            ->color(fn (string $state): string => match ($state) {
-                                'open' => 'success',
-                                'closed' => 'danger',
-                                'in_progress' => 'warning',
-                                'pending_approval' => 'info',
-                                'suspended' => 'danger',
-                                default => 'secondary',
-                            }),
-                    ])
-                    ->columns(2),
-    
-                Section::make('Program Details')
-                    ->schema([
-                        TextEntry::make('assistance_type')
-                            ->label('Type of Assistance')
-                            ->badge(),
-                        TextEntry::make('max_beneficiaries')
-                            ->label('Maximum Beneficiaries'),
-                        TextEntry::make('disbursement_method')
-                            ->label('Disbursement Method'),
-                        TextEntry::make('official_in_charge')
-                            ->label('SK Officials In Charge'),
-                    ])
-                    ->columns(2),
-    
-                Section::make('Timeline')
-                    ->schema([
-                        TextEntry::make('date_start')
-                            ->label('Start Date and Time')
-                            ->dateTime(),
-                            TextEntry::make('date_end')
-                            ->label('End Date and Time')
-                            ->dateTime(),
-                    ])
-                    ->columns(2),
-    
-                    Section::make('Requirements')
-                    ->schema([
-                        TextEntry::make('requirements')
-                            ->label('Program Requirements')
-                            ->formatStateUsing(function ($record) {
-                                return $record->requirements->map(function ($requirement) {
-                                    return "**{$requirement['requirement_name']}**\n{$requirement['description']}";
-                                })->join("\n\n");
+{
+    return $infolist
+        ->schema([
+            Section::make('Program Overview')
+                ->schema([
+                    // Basic Information
+                    ImageEntry::make('header')
+                        ->label('Header Image')
+                        ->size(100),
+                    TextEntry::make('title')
+                        ->label('Title'),
+                    TextEntry::make('description')
+                        ->label('Program Description')
+                        ->markdown(),
+                    TextEntry::make('sector')
+                        ->label('Sector')
+                        ->badge(),
+                    TextEntry::make('status')
+                        ->label('Status')
+                        ->badge()
+                        ->color(fn (string $state): string => match ($state) {
+                            'open' => 'success',
+                            'closed' => 'danger',
+                            'in_progress' => 'warning',
+                            'pending_approval' => 'info',
+                            'suspended' => 'danger',
+                            default => 'secondary',
+                        }),
+
+                    // Program Details
+                    TextEntry::make('assistance_type')
+                        ->label('Type of Assistance')
+                        ->badge(),
+                    TextEntry::make('max_beneficiaries')
+                        ->label('Maximum Beneficiaries'),
+                    TextEntry::make('disbursement_method')
+                        ->label('Disbursement Method'),
+                    TextEntry::make('official_in_charge')
+                        ->label('SK Officials In Charge'),
+
+                    // Timeline
+                    TextEntry::make('date_start')
+                        ->label('Start Date and Time')
+                        ->dateTime(),
+                    TextEntry::make('date_end')
+                        ->label('End Date and Time')
+                        ->dateTime(),
+
+                    // Requirements
+                    TextEntry::make('requirements')
+                        ->label('Program Requirements')
+
+                        ->formatStateUsing(function ($record) {
+                
+                            return $record->requirements->map(function ($requirement) {
+                                return "**{$requirement['requirement_name']}**\n{$requirement['description']}";
                             })
-                            ->markdown(),
-                    ])
-                    ->collapsible(),
-    
-               /*     Section::make('Program Components')
-                    ->schema([
-                        TextEntry::make('needs_donations')
-                            ->label('Accepts Donations'),
-                            TextEntry::make('needs_volunteers')
-                            ->label('Needs Volunteers'),
-                    ])
-                    ->columns(2),*/
-    
-                    Section::make('Donation Campaigns')
-                    ->schema([
-                        TextEntry::make('donations')
-                            ->label('Active Donation Campaigns')
-                            ->formatStateUsing(function ($record) {
-                                return $record->donations->map(function ($donation) {
-                                    return "**{$donation->title}** - *{$donation->donation_type}*";
-                                })->join("\n");
-                            })
-                            ->markdown(),
-                    ])
-                    ->visible(fn ($record) => $record->needs_donations)
-                    ->collapsible(),
-    
-                    Section::make('Volunteer Opportunities')
-                    ->schema([
-                        TextEntry::make('volunteerOpportunities')
-                            ->label('Available Positions')
-                            ->formatStateUsing(function ($record) {
-                                return $record->volunteerOpportunities->map(function ($opportunity) {
-                                    return "**{$opportunity->role_title}**\n" .
-                                           "Slots: {$opportunity->slots}\n" .
-                                           "Description: {$opportunity->description}\n" ;
-                                         //  "Period: {$opportunity->start_date->format('M d, Y')} - {$opportunity->end_date->format('M d, Y')}";
-                                })->join("\n\n");
-                            })
-                            ->markdown(),
-                    ])
-                    ->visible(fn ($record) => $record->needs_volunteers)
-                    ->collapsible(),
-            ]);
-            
-    }
+                            ->join("\n\n")
+                            
+                           ;
+                        })
+                        ->markdown(),
+
+                    // Donation Campaigns
+                    TextEntry::make('donations')
+                        ->label('Active Donation Campaigns')
+                        ->formatStateUsing(function ($record) {
+                            return $record->donations->map(function ($donation) {
+                                return "**{$donation->title}** - *{$donation->donation_type}*";
+                            })->join("\n");
+                        })
+                        ->markdown()
+                        ->visible(fn ($record) => $record->needs_donations),
+
+                    // Volunteer Opportunities
+                    TextEntry::make('volunteerOpportunities')
+                        ->label('Available Positions')
+                        ->formatStateUsing(function ($record) {
+                            return $record->volunteerOpportunities->map(function ($opportunity) {
+                                return "**{$opportunity->role_title}**\n" .
+                                       "Slots: {$opportunity->slots}\n" .
+                                       "Description: {$opportunity->description}\n";
+                            })->join("\n\n");
+                        })
+                        ->markdown()
+                        ->visible(fn ($record) => $record->needs_volunteers),
+                ])
+                ->columns(2), // Adjust column layout as needed
+        ]);
+}
+
 
     public static function getRelations(): array
     {
