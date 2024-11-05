@@ -8,10 +8,11 @@ import {
 } from '@ant-design/icons';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import { Inertia } from '@inertiajs/inertia';
 
 const { Title, Text } = Typography;
 
-const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonations, needsVolunteer }) => {
+const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonations, needsVolunteer, volunteerOpportunities, userVolunteerApplications  }) => {
   // Initialize form data using useForm
   const { data, setData, post, errors, processing } = useForm({
     files: {},
@@ -31,6 +32,7 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonat
   const [selectedOpportunity, setSelectedOpportunity] = useState(null);
   const [isVolunteerModalVisible, setVolunteerModalVisible] = useState(false);
   const [volunteerNotes, setVolunteerNotes] = useState('');
+  const [hasAppliedToVolunteer, setHasAppliedToVolunteer] = useState(false);
 
   useEffect(() => {
     if (ayudaApplicant?.status && ayudaApplicant?.status !== applicationStatus) {
@@ -40,6 +42,15 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonat
       setAssistanceReceivedState(true);
     }
   }, [ayudaApplicant]);
+
+  useEffect(() => {
+    // Check if the user has applied to any volunteer opportunities
+    if (userVolunteerApplications && userVolunteerApplications.length > 0) {
+      setHasAppliedToVolunteer(true);
+    } else {
+      setHasAppliedToVolunteer(false);
+    }
+  }, [userVolunteerApplications]);
 
   const handleApply = () => {
     if (ayuda?.requirements && ayuda.requirements.length > 0) {
@@ -141,30 +152,33 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonat
 
 
 
-const handleVolunteer = () => {
-  if (!selectedOpportunity) {
-    message.error('Please select a volunteer position');
-    return;
-  }
-
-  Inertia.post(route('ayudas.volunteer', ayuda.id), {
-    volunteer_opportunity_id: selectedOpportunity,
-    notes: volunteerNotes,
-  }, {
-    onSuccess: () => {
-      message.success('Volunteer application submitted successfully!');
-      setVolunteerModalVisible(false);
-      // Reset form fields if necessary
-      setSelectedOpportunity(null);
-      setVolunteerNotes('');
-    },
-    onError: (errors) => {
-      console.error('Volunteer submission error:', errors);
-      message.error('Failed to submit volunteer application.');
-    },
-  });
-};
-
+  const handleVolunteer = () => {
+    if (!selectedOpportunity) {
+      message.error('Please select a volunteer position');
+      return;
+    }
+  
+    post(route('ayudas.volunteer', ayuda.id), {
+      data: {
+        volunteer_opportunity_id: selectedOpportunity,
+        notes: volunteerNotes,
+      },
+      onSuccess: () => {
+        message.success('Volunteer application submitted successfully!');
+        setVolunteerModalVisible(false);
+        // Reset form fields if necessary
+        setSelectedOpportunity(null);
+        setVolunteerNotes('');
+      },
+      onError: (errors) => {
+        console.error('Volunteer submission error:', errors);
+        message.error('Failed to submit volunteer application.');
+      },
+    });
+  };
+useEffect(() => {
+  console.log('Volunteer Opportunities:', volunteerOpportunities);
+}, [volunteerOpportunities]);
 
   const renderActionButton = () => {
     if (assistanceReceivedState) {
@@ -331,18 +345,29 @@ const handleVolunteer = () => {
                   </Upload>
                 </Modal>
 
-                {/* Volunteer Section */}
+               {/* Volunteer Section */}
                 <Divider />
                 <Title level={4}>Volunteer for this Program</Title>
                 <Text>{ayuda?.volunteer_slots} slots available</Text>
-                <Button 
-                  type="primary" 
-                  icon={<HeartOutlined />} 
-                  onClick={() => setVolunteerModalVisible(true)} 
-                  disabled={!needsVolunteer}
-                >
-                  Sign Up to Volunteer
-                </Button>
+
+                {hasAppliedToVolunteer ? (
+                  <Button 
+                    type="primary" 
+                    disabled 
+                    icon={<ExclamationCircleOutlined />} 
+                  >
+                    Application Pending
+                  </Button>
+                ) : (
+                  <Button 
+                    type="primary" 
+                    icon={<HeartOutlined />} 
+                    onClick={() => setVolunteerModalVisible(true)} 
+                    disabled={!needsVolunteer}
+                  >
+                    Apply to Volunteer
+                  </Button>
+                )}
                 <Modal
                   title="Volunteer Application"
                   open={isVolunteerModalVisible}
@@ -350,23 +375,24 @@ const handleVolunteer = () => {
                   onOk={handleVolunteer}
                 >
                   <Space direction="vertical" style={{ width: '100%' }}>
-                    <Select
-                      style={{ width: '100%' }}
-                      placeholder="Select a volunteer position"
-                      onChange={(value) => setSelectedOpportunity(value)}
-                    >
-                      {ayuda?.volunteerOpportunities?.map(opportunity => (
-                        <Select.Option key={opportunity.id} value={opportunity.id}>
-                          {opportunity.role_title} ({opportunity.slots} slots)
-                        </Select.Option>
-                      ))}
-                    </Select>
-                    <Input.TextArea
-                      placeholder="Why would you like to volunteer? (Optional)"
-                      value={volunteerNotes}
-                      onChange={(e) => setVolunteerNotes(e.target.value)}
-                      rows={4}
-                    />
+                  <Select
+                    style={{ width: '100%' }}
+                    placeholder="Select a volunteer position"
+                    value={selectedOpportunity}
+                    onChange={(value) => setSelectedOpportunity(value)}
+                  >
+                    {volunteerOpportunities?.map(opportunity => (
+                      <Select.Option key={opportunity.id} value={opportunity.id}>
+                        {opportunity.role_title} ({opportunity.slots} slots)
+                      </Select.Option>
+                    ))}
+                  </Select>
+                  <Input.TextArea
+                    placeholder="Why would you like to volunteer? (Optional)"
+                    value={volunteerNotes}
+                    onChange={(e) => setVolunteerNotes(e.target.value)}
+                    rows={4}
+                  />
                   </Space>
                 </Modal>
               </Card>

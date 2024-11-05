@@ -54,6 +54,11 @@ class AyudaController extends Controller
                 \Log::info('Ayuda donations:', ['donations' => $ayuda->donations]);
 
                 $authUser = Auth::user();
+
+                $userVolunteerApplications = VolunteerApplication::where('ayuda_id', $ayuda->id)
+                ->where('user_id', $authUser->id)
+                ->get();
+                
                 $ayudaApplicant = AyudaApplicant::where('ayuda_id', $ayuda->id)
                                                 ->where('user_id', $authUser->id)
                                                 ->first();
@@ -68,6 +73,7 @@ class AyudaController extends Controller
                     'volunteerOpportunities' => $ayuda->volunteerOpportunities,
                     'userApplications' => $ayuda->volunteerApplications,
                     'donationType' => $ayuda->donations->first() ? $ayuda->donations->first()->donation_type : 'money',
+                    'userVolunteerApplications' => $userVolunteerApplications,
                     'needsDonations' => $ayuda->needs_donations,
                     'needsVolunteer' => $ayuda->needs_volunteers,
                 ]);
@@ -272,32 +278,36 @@ class AyudaController extends Controller
        return redirect()->back()->with('success', 'Donation submitted successfully! Waiting for approval.');
    }
 
-public function volunteer(Request $request, $id)
-{
-    $request->validate([
-        'volunteer_opportunity_id' => 'required|exists:volunteer_opportunities,id',
-        'notes' => 'nullable|string'
-    ]);
-
-    // Check if user has already applied for this opportunity
-    $existingApplication = VolunteerApplication::where([
-        'user_id' => auth()->id(),
-        'ayuda_id' => $id,
-        'volunteer_opportunity_id' => $request->volunteer_opportunity_id
-    ])->exists();
-
-    if ($existingApplication) {
-        return redirect()->back()->with('error', 'You have already applied for this volunteer position.');
-    }
-
-    $application = VolunteerApplication::create([
-        'user_id' => auth()->id(),
-        'ayuda_id' => $id,
-        'volunteer_opportunity_id' => $request->volunteer_opportunity_id,
-        'status' => 'pending',
-        'notes' => $request->notes
-    ]);
-
-    return redirect()->back()->with('success', 'Volunteer application submitted successfully!');
-}
+   public function volunteer(Request $request, $id)
+   {
+       $request->validate([
+           'volunteer_opportunity_id' => 'required|exists:volunteer_opportunities,id',
+           'notes' => 'nullable|string'
+       ]);
+   
+       // Check if user has already applied for this opportunity
+       $existingApplication = VolunteerApplication::where([
+           'user_id' => auth()->id(),
+           'ayuda_id' => $id,
+           'volunteer_opportunity_id' => $request->volunteer_opportunity_id
+       ])->exists();
+   
+       if ($existingApplication) {
+           return redirect()->back()->with('error', 'You have already applied for this volunteer position.');
+       }
+   
+       $user = auth()->user();
+       $fullName = "{$user->first_name} {$user->last_name}";
+   
+       $application = VolunteerApplication::create([
+           'user_id' => auth()->id(),
+           'full_name' => $fullName, // Add this line
+           'ayuda_id' => $id,
+           'volunteer_opportunity_id' => $request->volunteer_opportunity_id,
+           'status' => 'pending',
+           'notes' => $request->notes
+       ]);
+   
+       return redirect()->back()->with('success', 'Volunteer application submitted successfully!');
+   }
 }

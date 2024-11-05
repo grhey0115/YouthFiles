@@ -111,5 +111,6 @@ class Ayuda extends Model
     {
         return $this->hasMany(Donation::class, 'ayuda_id');
     }
+
     
 }
