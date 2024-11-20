@@ -104,20 +104,25 @@ const Ayuda = () => {
   };
 
   const renderAssistance = (data) => {
-    const paginatedData = getPaginatedData(data);
+    // Sort by created_at in descending order (newest first)
+    const sortedData = data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  
+    // Then apply pagination on the sorted data
+    const paginatedData = getPaginatedData(sortedData);
     return (
       <>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {paginatedData && paginatedData.length > 0 ? (
             paginatedData.map(ayuda => (
               <Badge.Ribbon 
+                key={ayuda.id}
                 text={ayuda.max_beneficiaries - ayuda.current_beneficiaries > 0 
                     ? `${ayuda.max_beneficiaries - ayuda.current_beneficiaries} Slots Left`
                     : "Full"} 
                 color={ayuda.max_beneficiaries - ayuda.current_beneficiaries > 0 ? 'green' : 'red'} 
                 placement="start"
               >
-                <StyledCard key={ayuda.id}>
+                <StyledCard>
                   <img
                     className="image"
                     src={`/storage/${ayuda.header}`}
@@ -152,7 +157,7 @@ const Ayuda = () => {
       </>
     );
   };
-
+  
   return (
     <AuthenticatedLayout user={usePage().props.auth}>
       <Head title="Ayuda" />

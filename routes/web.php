@@ -5,6 +5,7 @@ use App\Http\Controllers\AyudaController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserAyudaHistoryController;
+use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AnnouncementController;
@@ -14,6 +15,7 @@ use App\Http\Controllers\Auth\OtpController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -59,6 +61,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/events/{event}/cancel', [EventController::class, 'cancel'])->name('events.cancel');
     Route::get('/events/{event}/attendance/{user}', [EventController::class, 'markAttendance'])->middleware('auth')->name('events.attendance');
     Route::post('/events/{event}/payment', [EventController::class, 'storePayment'])->name('events.payment');
+    Route::get('/events/{event}/certificate', [EventController::class, 'downloadCertificate'])
+    ->name('events.certificate')
+    ->middleware('auth');
 
     Route::get('/profile/view', [ProfileController::class, 'view'])->name('profile.view');
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -108,6 +113,12 @@ Route::middleware('auth')->group(function () {
 
 
     Route::post('/api/paymongo/payment-intent', [PaymentController::class, 'createPaymentIntent']);
+    Route::get('/budget/{budget}/export-disbursements', [
+        BudgetResource::class, 
+        'exportProjectDisbursements'
+    ])->name('budget.export-disbursements');
+
+    
 
 });
 

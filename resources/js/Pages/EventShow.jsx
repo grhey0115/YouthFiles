@@ -8,7 +8,7 @@ import { PlusOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 const EventShow = () => {
-    const { event, auth, isFull, flash = {}, hasJoined, paymentStatus: initialPaymentStatus } = usePage().props;
+    const { event, auth, isFull, flash = {}, hasJoined,attendance_status, paymentStatus: initialPaymentStatus } = usePage().props;
     const [paymentStatus, setPaymentStatus] = useState(initialPaymentStatus);
     const [userId, setUserId] = useState(null);
     const [joined, setJoined] = useState(hasJoined || false);
@@ -22,17 +22,23 @@ const EventShow = () => {
     const [previewTitle, setPreviewTitle] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+
+    console.log("attendance_status:", attendance_status);
+    console.log("eventEnded:", eventEnded);
+    console.log("joined:", joined);
+    console.log("paymentStatus:", paymentStatus);
+
     useEffect(() => {
         if (auth && auth.id) {
             setUserId(auth.id);
         }
 
         const now = new Date();
-        const eventEndTime = new Date(event.end_time);
+        const eventEndTime = new Date(event.event_date);
         if (now > eventEndTime) {
             setEventEnded(true);
         }
-    }, [auth, event.end_time]);
+    }, [auth, event.event_date]);
 
     const openNotification = (type, message) => {
         notification[type]({
@@ -173,14 +179,23 @@ const EventShow = () => {
 
     const renderActionButton = () => {
         const daysUntilEvent = Math.ceil((new Date(event.start_time) - new Date()) / (1000 * 60 * 60 * 24));
-        
         const cancellationDaysBefore = event.cancellation_days_before;
     
         if (eventEnded) {
+            // Check if the user has joined the event and has "present" status
+            if (joined && attendance_status === "present") {
+                return (
+                    <Button
+                        type="primary"
+                        onClick={() => window.location.href = route('events.certificate', event.id)}
+                    >
+                        Download Certificate
+                    </Button>
+                );
+            }
             return <Button type="primary" disabled>Event Ended</Button>;
         }
     
-        // Allow cancellation even if the event is full
         if (joined) {
             if (daysUntilEvent < cancellationDaysBefore) {
                 return <Button type="default" disabled>Cancellation Not Allowed</Button>;
@@ -188,7 +203,6 @@ const EventShow = () => {
             return <Button type="primary" danger onClick={handleCancel}>Cancel</Button>;
         }
     
-        // Only disable join if the event is full
         if (isFull) {
             return <Button type="default" disabled>Event is Full</Button>;
         }

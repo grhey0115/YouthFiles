@@ -27,7 +27,8 @@ class Event extends Model
     'cancellation_days_before',
     'status',           // New: Track event status
     'type',             // New: Event type (e.g., seminar, workshop)
-    'category'          // New: Event category (e.g., sports, outreach)
+    'category',
+    'event_date',      // New: Event category (e.g., sports, outreach)
 ];
 
 // Set default values for status and cancellation days

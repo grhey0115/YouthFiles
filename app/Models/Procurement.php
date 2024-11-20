@@ -16,8 +16,12 @@ class Procurement extends Model
         'project_id',              // Foreign key to Project
         'purpose',                 // Purpose of the procurement
         'approval_status',         // Status of the approval process
-        'procurement_officer',      // Array of procurement officers
+        'procurement_officer',  
+        'approve_by',
+        'request_by',    // Array of procurement officers
         'remarks',  
+       'requestor_designation',
+       'approver_designation',
     ];
     public function user()
     {
@@ -47,8 +51,10 @@ class Procurement extends Model
     {
         return $this->hasMany(ProcurementItem::class);
     }
-    
-   
-   
+    public function scopeApproved(Builder $query)  
+    {  
+       return $query->where('approval_status', 'approved');  
+    }  
+
 
 }

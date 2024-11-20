@@ -16,6 +16,7 @@ use App\Models\EventRegistration;
 use App\Models\Payment;
 use Carbon\Carbon;
 use App\Models\User; 
+use Barryvdh\DomPDF\Facade\Pdf;
 use App\Notifications\SlotAvailableNotification;
 
 class EventController extends Controller
@@ -42,6 +43,9 @@ class EventController extends Controller
                           ->where('user_id', $authUser->id)
                           ->first();
     
+        // Get attendance status from the pivot table
+        $attendanceStatus = $event->users()->where('user_id', $authUser->id)->first()?->pivot->attendance_status;
+    
         return Inertia::render('EventShow', [
             'event' => $event,
             'auth' => $authUser,
@@ -50,6 +54,7 @@ class EventController extends Controller
             'isFull' => $event->isFull(),
             'paymentStatus' => $payment ? $payment->status : null,
             'cancellation_days_before' => $event->cancellation_days_before,
+            'attendance_status' => $attendanceStatus, // Pass the attendance status to the frontend
         ]);
     }
 
@@ -211,5 +216,28 @@ class EventController extends Controller
             $user->notify(new SlotAvailableNotification($event));
         }
     }
+
+    public function downloadCertificate($eventId)
+    {
+        $event = Event::findOrFail($eventId);
+        $user = Auth::user();
+    
+        // Check if the user attended the event
+        $attendance = $event->users()->where('user_id', $user->id)->first();
+        if (!$attendance || $attendance->pivot->attendance_status !== 'present') {
+            return redirect()->back()->with('error', 'You are not eligible to download the certificate.');
+        }
+    
+        // Convert start_time to a Carbon instance
+        $event->start_time = Carbon::parse($event->start_time);
+    
+        $pdf = Pdf::loadView('pdf.certificate', [
+            'name' => "{$user->first_name} {$user->last_name}",
+            'event' => $event,
+        ])->setPaper('a4', 'landscape');
+    
+        return $pdf->download("Certificate-{$user->first_name}-{$user->last_name}.pdf");
+    }
+
         
 }

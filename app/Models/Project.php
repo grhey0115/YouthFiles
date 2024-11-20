@@ -32,7 +32,7 @@ class Project extends Model
     // Relationship with Procurements
     public function procurements()
     {
-        return $this->hasMany(Procurement::class);
+        return $this->hasMany(Procurement::class); 
     }
     // Relationship with Disbursements
     public function getRemainingBudgetAttribute()
@@ -67,7 +67,12 @@ class Project extends Model
         $project->budget->refresh();
     }
 
+   /* public function getRemainingBudgetAttribute()
+    {
+        return $this->total_budget - $this->disbursements()->where('status', 'approved')->sum('disbursed_amount');
+    }*/
 
+    
     
    
 }

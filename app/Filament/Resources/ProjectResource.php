@@ -6,6 +6,7 @@ use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
 use App\Filament\Resources\ProjectResource\RelationManagers\ProcurementRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\DisbursementRelationManager;
+use App\Filament\Resources\ProjectResource\RelationManagers\PurchaseRequestRelationManager;
 use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -130,8 +131,10 @@ class ProjectResource extends Resource
     public static function getRelations(): array
     {
         return [
+            RelationManagers\PurchaseRequestRelationManager::class,
             RelationManagers\ProcurementRelationManager::class,
             RelationManagers\DisbursementRelationManager::class,
+            
         ];
     }
 
@@ -142,5 +145,24 @@ class ProjectResource extends Resource
             'create' => Pages\CreateProject::route('/create'),
             'edit' => Pages\EditProject::route('/{record}/edit'),
         ];
+    }
+
+    public static function create(array $data): Project
+    {
+        $budget = Budget::findOrFail($data['budget_id']);
+
+        // Check if the budget has enough funds
+        if ($budget->remaining_amount < $data['total_budget']) {
+            // Throw a Filament exception or display a notification
+            throw new \Exception('Not enough budget remaining.');
+        }
+
+        $project = Project::create($data);
+
+        // Deduct the project's budget from the main budget
+        $budget->remaining_amount -= $data['total_budget'];
+        $budget->save();
+
+        return $project;
     }
 }

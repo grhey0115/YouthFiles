@@ -38,6 +38,7 @@ class EventResource extends Resource
                 Forms\Components\TextArea::make('description')->required(),
                 Forms\Components\DateTimePicker::make('start_time')->required(),
                 Forms\Components\DateTimePicker::make('end_time')->required(),
+                Forms\Components\DateTimePicker::make('event_date')->required(),
                
                 Forms\Components\TextInput::make('location')->required(), // Adding location field
                 Forms\Components\TextInput::make('youth_points')
