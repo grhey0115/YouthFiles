@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Dropdown, Badge, Typography, Space, Drawer, Button, Modal, Avatar } from 'antd';
+import { Layout, Menu, Dropdown, Badge, Typography, Space, Drawer, Button, Modal, Avatar, List, Empty, Spin } from 'antd';
 import {
     MenuOutlined,
     UserOutlined,
@@ -10,133 +10,118 @@ import {
     FundOutlined,
     HomeOutlined,
     BellOutlined,
+    LoadingOutlined,
 } from '@ant-design/icons';
 import ApplicationLogo from '@/Components/ApplicationLogo';
-import { Link, usePage } from '@inertiajs/react';
-import Echo from 'laravel-echo';
+import { Link, usePage } from '@inertiajs/react'; // Import route
+import axios from 'axios';
 
 const { Header, Content } = Layout;
 
 export default function Authenticated({ header, children }) {
-    const { auth, notifications: initialNotifications } = usePage().props;
-    const user = auth.user || {}; // Default to an empty object to avoid errors
-
-    const [notifications, setNotifications] = useState(initialNotifications || []);
-    const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(user.unread_notifications_count || 0);
+    const { auth } = usePage().props;
+    const user = auth.user || {};
+    const [notifications, setNotifications] = useState([]);
+    const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+    const [loadingNotifications, setLoadingNotifications] = useState(true);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState(null);
+    const [showAllNotifications, setShowAllNotifications] = useState(false);
 
     useEffect(() => {
-        const handleResize = () => {
-            setIsMobile(window.innerWidth < 768);
+        const fetchNotifications = async () => {
+            setLoadingNotifications(true);
+            try {
+                const response = await axios.get(route('notifications.index'));
+                console.log("Notifications response:", response.data); // Log the response
+                setNotifications(response.data.data || []);
+                setUnreadNotificationsCount((response.data.data || []).filter(n => !n.read_at).length);
+            } catch (error) {
+                console.error("Error fetching notifications:", error);
+                setNotifications([]);
+            } finally {
+                setLoadingNotifications(false);
+            }
         };
+
+        fetchNotifications();
+    }, []);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
         window.addEventListener('resize', handleResize);
-        return () => {
-            window.removeEventListener('resize', handleResize);
-        };
+        return () => window.removeEventListener('resize', handleResize);
     }, []);
 
     useEffect(() => {
         setUnreadNotificationsCount(notifications.filter(n => !n.read_at).length);
     }, [notifications]);
 
-    useEffect(() => {
-        // Set up Laravel Echo for real-time notifications
-        window.Echo = new Echo({
-            broadcaster: 'reverb',  // Since Reverb works like Pusher, use 'pusher'
-            key: import.meta.env.VITE_REVERB_APP_KEY,
-            wsHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
-            wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
-            forceTLS: false,  // Use non-SSL WebSocket for local development
-            enabledTransports: ['ws'],  // Disable fallback transports like polling
-            disableStats: true,
-        });
-    
-        // Listen for the 'NewAnnouncementCreated' event on the 'announcements' channel
-        window.Echo.channel('announcements')
-            .listen('NewAnnouncementCreated', (e) => {
-                const newNotification = {
-                    id: Math.random().toString(36).substr(2, 9),  // Generate a unique ID for the notification
-                    data: {
-                        title: e.title,
-                        message: e.message,
-                    },
-                    created_at: new Date().toISOString(),
-                    read_at: null,
-                };
-    
-                // Update the notifications list and unread count
-                setNotifications((prevNotifications) => [...prevNotifications, newNotification]);
-                setUnreadNotificationsCount((prevCount) => prevCount + 1);
-            });
-    
-        return () => {
-            // Clean up the Echo channel when the component is unmounted
-            window.Echo.leaveChannel('announcements');
-        };
-    }, []);
-
     const fullName = `${user.first_name || ''} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name || ''}`.trim();
-   
 
-    const notificationMenu = (
-        <Menu className="notification-menu">
-            {notifications.length > 0 ? (
-                notifications.map((notification) => (
-                    <Menu.Item key={notification.id} onClick={() => openNotificationModal(notification)}>
-                        <div className="notification-item">
-                            <Typography.Text className="notification-title" strong={!notification.read_at}>
-                                {notification.data.title}
-                            </Typography.Text>
-                            <Typography.Paragraph className="notification-message">
-                                {notification.data.message}
-                            </Typography.Paragraph>
-                            <Typography.Text className="notification-date">
-                                {new Date(notification.created_at).toLocaleString()}
-                            </Typography.Text>
-                        </div>
-                    </Menu.Item>
-                ))
-            ) : (
-                <Menu.Item key="no-notifications">No new notifications</Menu.Item>
-            )}
-        </Menu>
+    const notificationMenuItems = loadingNotifications ? (
+        [{ key: 'loading', label: <Spin indicator={<LoadingOutlined style={{ fontSize: 24 }} spin />} /> }]
+    ) : (
+        notifications.length > 0 ? notifications.map(notification => ({
+            key: notification.id,
+            label: (
+                <Menu.Item onClick={() => openNotificationModal(notification)} style={{ padding: '8px 12px' }}>
+                    <List.Item.Meta
+                        title={<Typography.Text strong={!notification.read_at} style={{ fontSize: isMobile ? '12px' : '14px' }}>{notification.data.title}</Typography.Text>}
+                        description={
+                            <>
+                                <Typography.Paragraph 
+                                    className="notification-message" 
+                                    style={{ 
+                                        margin: 0, 
+                                        fontSize: isMobile ? '10px' : '12px', 
+                                        maxWidth: '300px', // Set max width for notification message
+                                        overflowWrap: 'break-word', // Ensure long words break
+                                        wordWrap: 'break-word', // For older browsers
+                                    }}
+                                >
+                                    {notification.data.message}
+                                </Typography.Paragraph>
+                                <Typography.Text type="secondary" style={{ fontSize: '10px' }}>{new Date(notification.created_at).toLocaleString()}</Typography.Text>
+                            </>
+                        }
+                    />
+                </Menu.Item>
+            )
+        })) : [{ key: 'empty', label: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No new notifications" /> }]
     );
-
-    const notificationMenuItems = (notifications || []).length > 0 
-    ? notifications.map((notification) => ({
-        key: notification.id,
-        label: (
-            <div className="notification-item" onClick={() => openNotificationModal(notification)}>
-                <Typography.Text className="notification-title" strong={!notification.read_at}>
-                    {notification.data.title}
-                </Typography.Text>
-                <Typography.Paragraph className="notification-message">
-                    {notification.data.message}
-                </Typography.Paragraph>
-                <Typography.Text className="notification-date">
-                    {new Date(notification.created_at).toLocaleString()}
-                </Typography.Text>
-            </div>
-        ),
-    }))
-    : [{ key: 'no-notifications', label: 'No new notifications' }];
-
 
     const userRoles = user.roles ? user.roles.map(role => role.name) : [];
     const isAdmin = userRoles.includes('super_admin') || userRoles.includes('panel_user');
-    const userMenu = {
-        items: [
-            { key: 'profile', icon: <UserOutlined />, label: <Link href={route('profile.view')}>Profile</Link> },
-            { key: 'Manage', icon: <SettingOutlined />, label: <Link href={route('profile.edit')}>Manage Account</Link> },
-            { key: 'logout', icon: <LogoutOutlined />, label: <Link href={route('logout')} method="post" as="button">Log Out</Link> },
-            ...(isAdmin ? [
-                { key: 'admin', icon: <UserOutlined />, label: <Link href={route('admin.dashboard')}>Admin</Link> },
-            ] : []),
-        ]
-    };
+
+    const userMenu = {  
+        items: [  
+          {  
+             key: 'profile',  
+             icon: <UserOutlined />,  
+             label: <Link href={route('profile.view')}>Profile</Link>  
+          },  
+          {  
+             key: 'Manage',  
+             icon: <SettingOutlined />,  
+             label: <Link href={route('profile.edit')}>Manage Account</Link>  
+          },  
+          {  
+             key: 'logout',  
+             icon: <LogoutOutlined />,  
+             label: <Link href={route('logout')} method="post" as="button">Log Out</Link>  
+          },  
+          ...(isAdmin ? [  
+             {  
+                key: 'admin',  
+                icon: <UserOutlined />,  
+                label: <Link href={route('admin.dashboard')}>Admin</Link>  
+             },  
+          ] : []),  
+        ]  
+     };  
 
     const menuItems = [
         { key: 'dashboard', icon: <CalendarOutlined />, label: 'Join Events', routeName: 'dashboard' },
@@ -161,11 +146,10 @@ export default function Authenticated({ header, children }) {
     const openNotificationModal = async (notification) => {
         setSelectedNotification(notification);
         setIsModalOpen(true);
-    
+
         if (!notification.read_at) {
             try {
                 await markNotificationAsRead([notification.id]);
-    
                 const updatedNotifications = notifications.map((n) =>
                     n.id === notification.id ? { ...n, read_at: new Date().toISOString() } : n
                 );
@@ -220,11 +204,20 @@ export default function Authenticated({ header, children }) {
                     </Typography.Title>
                     {!isMobile && renderMenuItems('horizontal')}
                     <Space size="large" style={{ marginLeft: 'auto' }}>
-                   <Dropdown menu={{ items: notificationMenuItems }} placement="bottomRight" trigger={['click']}>
-                        <Badge count={unreadNotificationsCount} offset={[10, 0]}>
-                            <BellOutlined style={{ fontSize: '20px' }} />
-                        </Badge>
-                    </Dropdown>
+                        <Dropdown 
+                            overlay={
+                                <Menu style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                    {notificationMenuItems.map(item => item.label)} {/* Render valid React nodes */}
+                                </Menu>
+                            }
+                            placement="bottomRight" 
+                            trigger={['click']}
+                        >
+                            <Badge count={unreadNotificationsCount} offset={[10, 0]}>
+                                <BellOutlined style={{ fontSize: '20px' }} />
+                            </Badge>
+                        </Dropdown>
+
                         <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
                             <Avatar
                                 src={user.avatar_url || '/default_avatar1.png'}
@@ -254,7 +247,6 @@ export default function Authenticated({ header, children }) {
             >
                 {renderMenuItems('inline')}
             </Drawer>
-            
 
             {header && (
                 <div style={{ backgroundColor: '#fff', boxShadow: '0 1px 4px rgba(0, 21, 41, 0.08)', padding: '16px 24px' }}>
@@ -284,7 +276,6 @@ export default function Authenticated({ header, children }) {
                 </p>
                 <small>{selectedNotification && new Date(selectedNotification.created_at).toLocaleString()}</small>
             </Modal>
-
         </Layout>
     );
 }

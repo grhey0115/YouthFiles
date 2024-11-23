@@ -10,7 +10,6 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Support\Facades\Storage;
 use App\Notifications\TanodRequestStatusNotification;
 use App\Notifications\TanodRequestReminderNotification;
 
@@ -20,7 +19,7 @@ class TanodRequestsResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
-    //protected static ?string $navigationGroup = 'Community Services';
+    protected static ?string $navigationGroup = 'Community Services';
 
     public static function form(Form $form): Form
     {
@@ -211,26 +210,7 @@ class TanodRequestsResource extends Resource
                     ->requiresConfirmation()
                     ->visible(fn (TanodRequests $record) => in_array($record->status, ['approved', 'in_progress'])),
 
-
-                    Tables\Actions\Action::make('viewFiles')
-                        ->label('View Uploaded Req')
-                        ->icon('heroicon-s-eye')
-                        ->color('secondary')
-                        ->modalHeading('Uploaded Files')
-                        ->modalWidth('xl')
-                        ->modalContent(function (TanodRequests $record) {
-                            $files = collect();
-                            if ($record->request_letter) {
-                                $files->push((object)[
-                                    'file_path' => $record->request_letter,
-                                    'requirement' => (object)[
-                                        'requirement_name' => 'Request Letter'
-                                    ]
-                                ]);
-                            }
-
-                            return view('filament.modals.tanod-files', compact('files'));
-                        }),
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ]);

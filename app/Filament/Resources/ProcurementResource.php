@@ -33,6 +33,7 @@ class ProcurementResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-numbered-list';
     protected static ?string $navigationGroup = 'Project Expenditure';
     protected static ?int $navigationSort = 4;
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
 {

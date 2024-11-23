@@ -5,8 +5,11 @@ use App\Http\Controllers\AyudaController;
 use App\Http\Controllers\EventController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserAyudaHistoryController;
+use App\Http\Controllers\HelpCenterController;
+use App\Http\Controllers\BorrowRequestController;
 use App\Http\Controllers\CertificateController;
 use App\Http\Controllers\DocumentRequestController;
+use App\Http\Controllers\TanodRequestController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AnnouncementController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -108,17 +111,60 @@ Route::middleware('auth')->group(function () {
         // Notifications
         Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
         Route::middleware(['auth:sanctum'])->get('/notifications', [NotificationController::class, 'index'])->name('notifications.list');
-        Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+       // Route::post('/notifications/mark-as-read', [NotificationController::class, 'markAsRead'])->name('notifications.markAsRead');
+
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])
+                ->name('notifications.index');
+            
+            Route::post('/mark-read', [NotificationController::class, 'markAsRead'])
+                ->name('notifications.markAsRead');
+            
+            Route::post('/delete', [NotificationController::class, 'deleteNotifications'])
+                ->name('notifications.delete');
+        });
     });
 
 
     Route::post('/api/paymongo/payment-intent', [PaymentController::class, 'createPaymentIntent']);
-    Route::get('/budget/{budget}/export-disbursements', [
+   /* Route::get('/budget/{budget}/export-disbursements', [
         BudgetResource::class, 
         'exportProjectDisbursements'
-    ])->name('budget.export-disbursements');
+    ])->name('budget.export-disbursements');*/
+
 
     
+    Route::get('/help-center', [HelpCenterController::class, 'index'])->name('help-center');
+       // Route::post('/borrow-equipment', [BorrowRequestController::class, 'store'])
+         //   ->name('borrow.store');
+            
+            Route::resource('borrow-requests', BorrowRequestController::class)
+            ->only(['index', 'store', 'show']);
+            Route::post('/borrow-requests', [BorrowRequestController::class, 'store'])
+            ->name('borrow.store');
+        
+        // Optional: Cancel route if not included in resource controller
+        Route::post('borrow-requests/{borrowRequest}/cancel', 
+            [BorrowRequestController::class, 'cancel'])
+            ->name('borrow-requests.cancel');
+   
+
+            Route::middleware(['auth'])->group(function () {
+                Route::get('/tanod-requests/create', [TanodRequestController::class, 'create'])->name('tanod.requests.create');
+                Route::post('/tanod-requests', [TanodRequestController::class, 'store'])->name('tanod.requests.store');
+                Route::get('/tanod-requests', [TanodRequestController::class, 'index'])->name('tanod.requests.index');
+                // Add more routes as needed
+            });
+
+            Route::get('/download/tanod/{filename}', function ($filename) {
+                $path = 'tanod_requests/' . $filename;
+                
+                if (!Storage::disk('public')->exists($path)) {
+                    abort(404);
+                }
+            
+                return Storage::disk('public')->download($path);
+            })->name('download.tanod.file');
 
 });
 

@@ -25,6 +25,7 @@ class RequirementResource extends Resource
     protected static ?string $model = Requirement::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationGroup = 'Ayuda';
 
     public static function form(Form $form): Form

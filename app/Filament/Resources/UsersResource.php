@@ -45,6 +45,9 @@ class UsersResource extends Resource
                     ->email()
                     ->required()
                     ->unique(ignoreRecord: true),
+                    Forms\Components\TextInput::make('password')
+                    ->label('Password')
+                    ->required(),
                 Forms\Components\CheckboxList::make('roles')
                     ->label('Roles')
                     ->relationship('roles', 'name')
