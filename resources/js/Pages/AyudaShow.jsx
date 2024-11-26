@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useForm } from '@inertiajs/react';
+import { useForm,usePage } from '@inertiajs/react';
 import { 
   Upload, Button, message, Layout, Card, Row, Col, Select, Typography, Image, Divider, Space, Tag, Alert, InputNumber, Modal, Input 
 } from 'antd';
@@ -12,7 +12,7 @@ import { Inertia } from '@inertiajs/inertia';
 
 const { Title, Text } = Typography;
 
-const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonations, needsVolunteer, volunteerOpportunities, userVolunteerApplications  }) => {
+const AyudaShow = ({ ayuda, ayudaApplicant, assistanceReceived, needsDonations, needsVolunteer, volunteerOpportunities, userVolunteerApplications  }) => {
   // Initialize form data using useForm
   const { data, setData, post, errors, processing } = useForm({
     files: {},
@@ -22,7 +22,7 @@ const AyudaShow = ({ ayuda, auth, ayudaApplicant, assistanceReceived, needsDonat
     reference_number: '',
     receipt: null,
   });
-
+  const { auth} = usePage().props;
   const [filePreviews, setFilePreviews] = useState({});
   const [applicationStatus, setApplicationStatus] = useState(ayudaApplicant?.status || 'not_applied');
   const [assistanceReceivedState, setAssistanceReceivedState] = useState(ayudaApplicant?.assistance_received || false);
@@ -194,7 +194,7 @@ useEffect(() => {
   };
 
   return (
-    <AuthenticatedLayout user={auth} header={<Title level={2}>Ayuda Details</Title>}>
+    <AuthenticatedLayout user={usePage().props.auth}>
       <Head title={ayuda?.title || 'Ayuda Details'} />
 
       <Layout.Content className="container mx-auto p-4">

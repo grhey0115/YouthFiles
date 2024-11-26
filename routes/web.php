@@ -7,7 +7,10 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\UserAyudaHistoryController;
 use App\Http\Controllers\HelpCenterController;
 use App\Http\Controllers\BorrowRequestController;
-use App\Http\Controllers\CertificateController;
+//use App\Http\Controllers\CertificateController;
+use App\Http\Controllers\EmergencyRequestController;
+use App\Http\Controllers\GcashRedemptionConfigController;
+use App\Http\Controllers\PointsRedemptionController;
 use App\Http\Controllers\DocumentRequestController;
 use App\Http\Controllers\TanodRequestController;
 use App\Http\Controllers\NotificationController;
@@ -72,7 +75,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.updateAvatar');
+   // Route::patch('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.updateAvatar');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])
+    ->name('profile.updateAvatar')
+    ->middleware(['auth', 'verified']);
 
       // Multi-step form routes
       Route::get('/profile/form', [ProfileController::class, 'showForm'])->name('profile.form');
@@ -166,6 +172,34 @@ Route::middleware('auth')->group(function () {
                 return Storage::disk('public')->download($path);
             })->name('download.tanod.file');
 
+
+           // Route::get('/certificate/preview/{id}', [CertificateController::class, 'preview'])->name('certificate.preview');
+
+          //  Route::get('/test-certificate', 'CertificateController@showCertificate');
+
+
+         
+            Route::post('/emergency-request', [EmergencyRequestController::class, 'store'])
+                ->name('sk.emergency.store');
+            
+            Route::get('/emergency-requests', [EmergencyRequestController::class, 'index'])
+                ->name('emergency-requests.index');
+
+
+            Route::post('/points/redeem', [PointsRedemptionController::class, 'store'])
+                 ->name('points.redeem');
+    
+            Route::delete('/points/redemption/{id}/cancel', [PointsRedemptionController::class, 'cancel'])
+                ->name('points.redemption.cancel');
+    
+            Route::get('/points/redemptions', [PointsRedemptionController::class, 'index'])
+                ->name('points.redemptions');
+
+            Route::get('/gcash/redemption/configs', [GcashRedemptionConfigController::class, 'index'])
+                ->name('gcash.redemption.configs');
+
+            Route::get('/your.events.fetch', [EventController::class, 'fetchUserEvents'])->name('your.events.fetch');
+             
 });
 
 require __DIR__.'/auth.php';

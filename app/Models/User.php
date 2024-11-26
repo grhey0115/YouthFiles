@@ -17,6 +17,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     use HasFactory, Notifiable, HasRoles, HasPanelShield;
 
+
+    // Verification Status Constants
+    const STATUS_PENDING = 'pending';
+    const STATUS_IN_PROGRESS = 'in_progress';
+    const STATUS_VERIFIED = 'verified';
+    const STATUS_REJECTED = 'rejected';
+    const STATUS_SUSPENDED = 'suspended';
+
     /**
      * The attributes that are mass assignable.
      *
@@ -31,6 +39,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'password',
         'youth_points',
         'avatar',
+        'account_status',
+        'verification_steps',
+        'verified_at',
+        'rejection_reason',
     ];
 
     /**
@@ -53,7 +65,58 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'verified_at' => 'datetime',
+            'verification_steps' => 'array',
         ];
+    }
+    public function isVerified(): bool
+    {
+        return $this->account_status === self::STATUS_VERIFIED;
+    }
+    public function getVerificationProgress(): array
+    {
+        $requiredSteps = [
+            'email_verified' => $this->hasVerifiedEmail(),
+            'phone_verified' => $this->phone_number ? true : false,
+            'profile_completed' => $this->isProfileComplete(),
+            'personal_info' => $this->personalInformation()->exists(),
+            'educational_background' => $this->educationalBackground()->exists(),
+        ];
+
+        $completedSteps = $this->verification_steps ?? [];
+        $progress = array_merge($requiredSteps, $completedSteps);
+        
+        $completedCount = count(array_filter($progress));
+        $totalSteps = count($requiredSteps);
+        
+        return [
+            'percentage' => round(($completedCount / $totalSteps) * 100),
+            'steps' => $progress
+        ];
+    }
+    private function isProfileComplete(): bool
+    {
+        return !empty($this->first_name) && 
+               !empty($this->last_name) && 
+               !empty($this->email);
+    }
+    public function updateVerificationStatus(string $status, ?array $steps = null, ?string $rejectionReason = null)
+    {
+        $this->account_status = $status;
+        
+        if ($steps) {
+            $this->verification_steps = $steps;
+        }
+
+        if ($status === self::STATUS_VERIFIED) {
+            $this->verified_at = now();
+        }
+
+        if ($status === self::STATUS_REJECTED) {
+            $this->rejection_reason = $rejectionReason;
+        }
+
+        $this->save();
     }
     public function getNameAttribute(): string
     {
@@ -83,12 +146,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return $this->hasOne(EmergencyContact::class);
     }
-    public function getAvatarUrlAttribute()
-    {
-        return $this->avatar
-            ? Storage::url($this->avatar)
-            : 'https://via.placeholder.com/150'; // Default placeholder image
-    }
+   
 
     public function ayudaApplications(): HasMany
     {
@@ -116,5 +174,41 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     {
         return $this->hasMany(AcceptedVolunteer::class);
     }
-    
+    public function getFullNameAttribute()
+    {
+        return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
+    }
+    public function emergencyRequests()
+    {
+        return $this->hasMany(EmergencyRequest::class);
+    }
+    public function pointsRedemptions()
+    {
+        return $this->hasMany(PointsRedemption::class);
+    }
+
+    // Points management methods
+    public function addYouthPoints($points)
+    {
+        $this->youth_points += $points;
+        $this->save();
+    }
+
+    public function deductYouthPoints($points)
+    {
+        if ($this->youth_points >= $points) {
+            $this->youth_points -= $points;
+            $this->save();
+            return true;
+        }
+        return false;
+    }
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar 
+            ? asset('storage/avatars/' . $this->avatar)
+            : asset('/default_avatar1.png');
+    }
+
+   
 }

@@ -12,6 +12,7 @@ use App\Filament\Exports\EventParticipantsExporter;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Tabs;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use App\Filament\Exports\EventParticipantsExport;

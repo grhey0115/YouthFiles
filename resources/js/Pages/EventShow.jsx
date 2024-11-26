@@ -3,12 +3,12 @@ import { usePage } from '@inertiajs/react';
 import { router } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
-import { Button, Modal, Input, Upload, notification } from 'antd';
+import { Button, Modal, Input, Upload, message } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
 const EventShow = () => {
-    const { event, auth, isFull, flash = {}, hasJoined,attendance_status, paymentStatus: initialPaymentStatus } = usePage().props;
+    const { event, auth, isFull, flash = {}, hasJoined, attendance_status, paymentStatus: initialPaymentStatus } = usePage().props;
     const [paymentStatus, setPaymentStatus] = useState(initialPaymentStatus);
     const [userId, setUserId] = useState(null);
     const [joined, setJoined] = useState(hasJoined || false);
@@ -22,12 +22,6 @@ const EventShow = () => {
     const [previewTitle, setPreviewTitle] = useState('');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-
-    console.log("attendance_status:", attendance_status);
-    console.log("eventEnded:", eventEnded);
-    console.log("joined:", joined);
-    console.log("paymentStatus:", paymentStatus);
-
     useEffect(() => {
         if (auth && auth.id) {
             setUserId(auth.id);
@@ -40,19 +34,15 @@ const EventShow = () => {
         }
     }, [auth, event.event_date]);
 
-    const openNotification = (type, message) => {
-        notification[type]({
-            message: message,
-            placement: 'topRight',
-            duration: 5,
-        });
+    const openNotification = (type, content) => {
+        message[type](content, 5); // Duration of 5 seconds
     };
 
     useEffect(() => {
-        if (flash && flash.success) {
+        if (flash.success) {
             openNotification('success', flash.success);
         }
-        if (flash && flash.error) {
+        if (flash.error) {
             openNotification('error', flash.error);
         }
     }, [flash]);
@@ -223,6 +213,7 @@ const EventShow = () => {
 
     return (
         <AuthenticatedLayout user={auth}>
+            
             <Head title={event.name} />
             
             <div className="container mx-auto p-4">

@@ -14,33 +14,103 @@ class Event extends Model
     use HasFactory;
 
     protected $fillable = [ 
-    'name',
-    'description',
-    'start_time',
-    'end_time',
-    'location',        
-    'youth_points',    
-    'registration_fee',
-    'slots',
-    'header_image',
-    'qr_code_image',
-    'cancellation_days_before',
-    'status',           // New: Track event status
-    'type',             // New: Event type (e.g., seminar, workshop)
-    'category',
-    'event_date',      // New: Event category (e.g., sports, outreach)
-];
-
-// Set default values for status and cancellation days
-protected $attributes = [
-    'status' => 'draft',  // Default to 'draft' when creating a new event
-    'cancellation_days_before' => 3, // Default cancellation window is 3 days
-
+        'name',
+        'description',
+        'start_time',
+        'end_time',
+        'location',        
+        'youth_points',    
+        'registration_fee',
+        'slots',
+        'header_image',
+        'qr_code_image',
+        'cancellation_days_before',
+        'status',
+        'type',
+        'category',
+        'event_date',
+        // New Certificate Configuration Fields
+        'enable_certificates',
+        'certificate_theme',
+        'certificate_primary_color',
+        'certificate_secondary_color',
+        'certificate_orientation',
+        'certificate_paper_size'
     ];
+
+    // Set default values
+    protected $attributes = [
+        'status' => 'draft',
+        'cancellation_days_before' => 3,
+        'enable_certificates' => false,
+        'certificate_theme' => 'default',
+        'certificate_orientation' => 'landscape',
+        'certificate_paper_size' => 'a4'
+    ];
+
+    // Existing relationships
     public function users()
     {
         return $this->belongsToMany(User::class, 'event_user')->withPivot('attendance_status');
     }
+
+    public function registrations()
+    {
+        return $this->hasMany(EventRegistration::class);
+    }
+
+    public function pendingPayments()
+    {
+        return $this->hasMany(Payment::class)->where('status', 'pending');
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    // Certificate-related relationships and methods
+    public function certificateSignatories()
+    {
+        return $this->hasMany(EventCertificateSignatory::class);
+    }
+
+    // Comprehensive certificate configuration accessor
+    public function getCertificateConfigurationAttribute()
+    {
+        return [
+            'enabled' => $this->enable_certificates,
+            'theme' => $this->certificate_theme,
+            'primary_color' => $this->certificate_primary_color,
+            'secondary_color' => $this->certificate_secondary_color,
+            'orientation' => $this->certificate_orientation,
+            'paper_size' => $this->certificate_paper_size,
+            'signatories' => $this->certificateSignatories
+        ];
+    }
+
+    // Method to check if certificates are enabled
+    public function areCertificatesEnabled()
+    {
+        return $this->enable_certificates === true;
+    }
+
+    // Method to generate certificate (placeholder - implement your logic)
+    public function generateCertificate(User $user)
+    {
+        if (!$this->areCertificatesEnabled()) {
+            return null;
+        }
+
+        // Implement certificate generation logic
+        // This could involve:
+        // 1. Checking user's participation
+        // 2. Generating PDF with event and user details
+        // 3. Adding signatories
+        // 4. Applying selected theme and colors
+    }
+
+    // Existing methods
     public function generateQrCode(User $user)
     {
         $url = route('events.attendance', ['event' => $this->id, 'user' => $user->id]);
@@ -55,47 +125,38 @@ protected $attributes = [
         return $writer->writeString($url);
     }
 
-    public function registrations()
+    public function isFull()
     {
-        return $this->hasMany(EventRegistration::class);
+        $confirmedUsers = $this->users()->count();
+        $pendingPaymentsCount = $this->pendingPayments()->count();
+        $totalReservations = $confirmedUsers + $pendingPaymentsCount;
+
+        return $totalReservations >= $this->slots;
     }
-   /* public function isFull()
+
+    public function getCurrentParticipantsAttribute()
     {
-        $registeredUsersCount = $this->users()->count();
-        return $registeredUsersCount >= $this->slots;
-    }*/
-    public function pendingPayments()
-{
-    return $this->hasMany(Payment::class)->where('status', 'pending');
-}
+        return $this->users()->count();
+    }
 
-public function isFull()
-{
-    $confirmedUsers = $this->users()->count();
-    $pendingPaymentsCount = $this->pendingPayments()->count();
-    $totalReservations = $confirmedUsers + $pendingPaymentsCount;
+    public function getAvailableSlotsAttribute()
+    {
+        $confirmedUsers = $this->users()->count();
+        $pendingPaymentsCount = $this->pendingPayments()->count();
 
-    return $totalReservations >= $this->slots;
-}
-public function getCurrentParticipantsAttribute()
-{
-    // Assuming there's a 'users' relationship that tracks event participants
-    return $this->users()->count();
-}
-public function getAvailableSlotsAttribute()
-{
-    $confirmedUsers = $this->users()->count(); // Count confirmed users
-    $pendingPaymentsCount = $this->pendingPayments()->count(); // Count pending payments
+        $availableSlots = $this->slots - ($confirmedUsers + $pendingPaymentsCount);
 
-    // Subtract confirmed users and pending payments from total slots
-    $availableSlots = $this->slots - ($confirmedUsers + $pendingPaymentsCount);
+        return max(0, $availableSlots);
+    }
 
-    // Ensure available slots never go below zero
-    return max(0, $availableSlots);
-}
-public function payments()
-{
-    return $this->hasMany(Payment::class);
-}
+    // Scopes for filtering
+    public function scopeWithCertificates($query)
+    {
+        return $query->where('enable_certificates', true);
+    }
 
+    public function scopeByTheme($query, $theme)
+    {
+        return $query->where('certificate_theme', $theme);
+    }
 }

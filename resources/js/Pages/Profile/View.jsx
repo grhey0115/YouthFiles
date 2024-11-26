@@ -1,274 +1,178 @@
-import React from 'react';
-import { useForm, usePage } from '@inertiajs/react';
-import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head } from '@inertiajs/react';
-import { Avatar, Upload, Button, Tabs, message } from 'antd';
-import { FaCamera } from 'react-icons/fa';
-import axios from 'axios';
-import { Link } from '@inertiajs/react';
+import React, { useState, useEffect } from "react";
+import { usePage, Head } from "@inertiajs/react";
+import axios from "axios";
+import { message } from "antd";
+import AuthenticatedLayout from "@/Layouts/AuthenticatedLayout";
+import ProfileHeader from "./Partials/ProfileHeader";
+import ProfileTabs from "./Partials/ProfileTabs";
+import GCashRedemptionModal from "./components/GCashRedemptionModal";
 
-const { TabPane } = Tabs;
+export default function ViewProfile({ mustVerifyEmail, status }) {
+  const { 
+    user, 
+    personalInformation, 
+    educationalBackground, 
+    additionalInformation, 
+    emergencyContact 
+  } = usePage().props;
 
-export default function ViewProfile() {
-    const { user, personalInformation = {}, educationalBackground = {}, additionalInformation = {}, emergencyContact = {} } = usePage().props;
+  const [isGCashModalVisible, setIsGCashModalVisible] = useState(false);
+  const [selectedRedemptionOption, setSelectedRedemptionOption] = useState(null);
+  const [gcashName, setGcashName] = useState("");
+  const [gcashNumber, setGcashNumber] = useState("");
+  
+  const [userEvents, setUserEvents] = useState({
+    data: [],
+    loading: true,
+    error: null
+  });
+  
+  const [redemptionOptions, setRedemptionOptions] = useState({
+    data: [],
+    loading: true,
+    error: null
+  });
 
-    const { data, setData, patch } = useForm({
-        first_name: user?.first_name || '',
-        middle_name: user?.middle_name || '',
-        last_name: user?.last_name || '',
-        email: user?.email || '',
-        phone_number: user?.phone_number || '',
-        avatar: null,
-
-        // Personal Information
-        barangay: personalInformation?.barangay || '',
-        sitio: personalInformation?.sitio || '',
-        religion: personalInformation?.religion || '',
-        civil_status: personalInformation?.civil_status || '',
-        is_solo_parent: personalInformation?.is_solo_parent || false,
-        gender: personalInformation?.gender || '',
-        family_members: personalInformation?.family_members || '',
-        siblings: personalInformation?.siblings || '',
-        valid_id_paths: personalInformation?.valid_id_paths || [],
-
-        // Educational Background
-        current_status: educationalBackground?.current_status || '',
-        last_year_attended: educationalBackground?.last_year_attended || '',
-        year_graduated: educationalBackground?.year_graduated || '',
-        year_level: educationalBackground?.year_level || '',
-        course: educationalBackground?.course || '',
-
-        // Additional Information
-        is_currently_working: additionalInformation?.is_currently_working || '0',
-        hobbies: additionalInformation?.hobbies || [],
-        is_pwd: additionalInformation?.is_pwd || '0',
-        has_conflict_with_law: additionalInformation?.has_conflict_with_law || '0',
-        is_indigenous: additionalInformation?.is_indigenous || '0',
-        is_registered_voter: additionalInformation?.is_registered_voter || '0',
-        attended_assembly: additionalInformation?.attended_assembly || '0',
-        why_no_assembly: additionalInformation?.why_no_assembly || '',
-        residency_status: additionalInformation?.residency_status || 'Permanent',
-
-        // Emergency Contact
-        name: emergencyContact?.name || '',
-        relationship: emergencyContact?.relationship || '',
-        contact_number: emergencyContact?.contact_number || '',
-        address: emergencyContact?.address || '',
-    });
-
-    const handleAvatarChange = (info) => {
-        if (info.file.status === 'uploading') {
-            message.loading('Uploading avatar...');
-            return;
+  // Fetch user events
+  useEffect(() => {
+    const fetchUserEvents = async () => {
+      try {
+        // Use the exact route name 'your.events.fetch'
+        const response = await axios.get(route('your.events.fetch'), {
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        setUserEvents({
+          data: response.data || [],
+          loading: false,
+          error: null
+        });
+      } catch (error) {
+        console.error("Full error:", error);
+        
+        // More detailed error logging
+        if (error.response) {
+          console.error("Response error:", error.response.data);
+          console.error("Status code:", error.response.status);
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+        } else {
+          console.error("Error setting up request:", error.message);
         }
-
-        if (info.file.status === 'done') {
-            message.success('Avatar updated successfully!');
-        } else if (info.file.status === 'error') {
-            message.error('There was an error uploading the avatar.');
-        }
-    };
-
-    const uploadAvatar = (file) => {
-        const formData = new FormData();
-        formData.append('avatar', file);
-
-        return axios.patch(route('profile.updateAvatar'), formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        })
-        .then(response => {
-            return {
-                success: true,
-                file: response.data.avatar_url, // The new avatar URL
-            };
-        })
-        .catch(error => {
-            console.error('Error uploading avatar:', error);
-            return {
-                success: false,
-                error,
-            };
+  
+        setUserEvents({
+          data: [],
+          loading: false,
+          error: error.message || "Failed to fetch events"
         });
+        
+        message.error("Error fetching events: " + error.message);
+      }
     };
+  
+    fetchUserEvents();
+  }, []);
 
-    const handleProfileUpdate = (e) => {
-        e.preventDefault();
-
-        const formData = new FormData();
-        Object.keys(data).forEach(key => {
-            formData.append(key, data[key]);
+  // Fetch redemption options
+  useEffect(() => {
+    const fetchRedemptionOptions = async () => {
+      try {
+        const response = await axios.get(route("gcash.redemption.configs"), {
+          headers: {
+            Accept: "application/json",
+            "Content-Type": "application/json",
+          },
         });
 
-        axios.patch(route('profile.update'), formData, {
-            headers: {
-                'Content-Type': 'multipart/form-data',
-            },
-        })
-        .then(() => {
-            alert('Profile updated successfully!');
-        })
-        .catch((error) => {
-            console.error('Error updating profile:', error.response ? error.response.data : error.message);
-            alert('There was an error updating the profile.');
+        const validOptions = (response.data || [])
+          .filter(config => 
+            config.points_required !== undefined && 
+            config.gcash_amount !== undefined && 
+            config.is_active
+          )
+          .map(config => ({
+            points: config.points_required,
+            amount: config.gcash_amount,
+          }));
+
+        setRedemptionOptions({
+          data: validOptions,
+          loading: false,
+          error: null
         });
+      } catch (error) {
+        console.error("Error fetching redemption options:", error);
+        setRedemptionOptions({
+          data: [],
+          loading: false,
+          error: error.message || "Failed to fetch redemption options"
+        });
+        message.error("Failed to load redemption options");
+      }
     };
 
-    return (
-        <AuthenticatedLayout
-            user={user}
-            header={<h2 className="font-semibold text-xl text-gray-800 leading-tight">View Profile</h2>}
-        >
-            <Head title="View Profile" />
+    fetchRedemptionOptions();
+  }, []);
 
-            <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div className="bg-white shadow-sm sm:rounded-lg">
-                    {/* Profile Header */}
-                    <div className="flex items-center bg-gradient-to-r from-red-500 to-gray-700 text-white p-6 rounded-t-lg relative">
-                        <div className="relative">
-                            <Avatar
-                                src={user.avatar_url || '/default_avatar1.png'}
-                                size={100}
-                                alt="User Avatar"
-                            />
-                            <Upload
-                                name="avatar"
-                                accept="image/*"
-                                showUploadList={false}
-                                customRequest={({ file, onSuccess, onError }) => {
-                                    uploadAvatar(file).then(({ success }) => {
-                                        if (success) {
-                                            onSuccess();
-                                        } else {
-                                            onError();
-                                        }
-                                    });
-                                }}
-                                onChange={handleAvatarChange}
-                            >
-                                <Button
-                                    icon={<FaCamera />}
-                                    className="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full text-white"
-                                />
-                            </Upload>
-                        </div>
-                        <div className="ml-4">
-                            <h1 className="text-xl font-semibold">{user?.first_name} {user?.last_name}</h1>
-                            <p>{user?.email}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  const handleOpenGCashModal = (option) => {
+    if (user?.youth_points >= option.points) {
+      setSelectedRedemptionOption(option);
+      setIsGCashModalVisible(true);
+    } else {
+      message.warning("Insufficient points for this redemption.");
+    }
+  };
 
-            {/* Tabs Navigation */}
-            <Tabs defaultActiveKey="1" centered className="profile-tabs">
-                <TabPane tab="Profile" key="1">
-                    <div className="p-6 bg-white">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {/* Personal Information */}
-                            <div>
-                                <h2 className="text-lg font-semibold text-purple-600">Personal Information</h2>
-                                <div className="mt-2">
-                                    <p><strong>Sitio:</strong> {personalInformation?.sitio || 'N/A'}</p>
-                                    <p><strong>Birth Date:</strong> {personalInformation?.date_of_birth || 'N/A'}</p>
-                                    <p><strong>Age:</strong> {personalInformation?.age || 'N/A'}</p>
-                                    <p><strong>Civil Status:</strong> {personalInformation?.civil_status || 'N/A'}</p>
-                                    <p><strong>Religion:</strong> {personalInformation?.religion || 'N/A'}</p>
-                                    
-                                   
-                                    <p><strong>Civil Status:</strong> {personalInformation?.civil_status || 'N/A'}</p>
-                                    <p><strong>Civil Status:</strong> {personalInformation?.civil_status || 'N/A'}</p>
-                                    <p><strong>Civil Status:</strong> {personalInformation?.civil_status || 'N/A'}</p>
-                                </div>
-                            </div>
+  const handleRedeemPoints = async () => {
+    try {
+      const response = await axios.post(route('gcash.redeem'), {
+        points: selectedRedemptionOption.points,
+        amount: selectedRedemptionOption.amount,
+        gcash_name: gcashName,
+        gcash_number: gcashNumber
+      });
 
-                            {/* Educational Background */}
-                            <div>
-                                <h2 className="text-lg font-semibold text-purple-600">Educational Background</h2>
-                                <div className="mt-2">
-                                    <p><strong>Current Status:</strong> {educationalBackground?.current_status || 'N/A'}</p>
-                                    <p><strong>Course:</strong> {educationalBackground?.course || 'N/A'}</p>
-                                </div>
-                            </div>
+      message.success(response.data.message);
+      setIsGCashModalVisible(false);
+      // Optionally refresh points or trigger a refetch
+    } catch (error) {
+      message.error(error.response?.data?.message || "Redemption failed");
+    }
+  };
 
-                            {/* Additional Information */}
-                            <div>
-                                <h2 className="text-lg font-semibold text-purple-600">Additional Information</h2>
-                                <div className="mt-2">
-                                    <p><strong>Working:</strong> {additionalInformation.is_currently_working === '1' ? 'Yes' : 'No'}</p>
-                                    <p><strong>Hobbies:</strong> {additionalInformation?.hobbies.join(', ') || 'N/A'}</p>
-                                </div>
-                            </div>
+  return (
+    <AuthenticatedLayout user={user}>
+      <Head title="View Profile" />
+      
+      <ProfileHeader user={user} />
+      
+      <ProfileTabs 
+        user={user}
+        personalInformation={personalInformation}
+        educationalBackground={educationalBackground}
+        additionalInformation={additionalInformation}
+        emergencyContact={emergencyContact}
+        userEvents={userEvents.data}
+        isLoadingEvents={userEvents.loading}
+        redemptionOptions={redemptionOptions.data}
+        isLoadingOptions={redemptionOptions.loading}
+        handleOpenGCashModal={handleOpenGCashModal}
+        mustVerifyEmail={mustVerifyEmail}
+        status={status}
+      />
 
-                            {/* Emergency Contact */}
-                            <div>
-                                <h2 className="text-lg font-semibold text-purple-600">Emergency Contact</h2>
-                                <div className="mt-2">
-                                    <p><strong>Name:</strong> {emergencyContact?.name || 'N/A'}</p>
-                                    <p><strong>Relationship:</strong> {emergencyContact?.relationship || 'N/A'}</p>
-                                    <p><strong>Contact Number:</strong> {emergencyContact?.contact_number || 'N/A'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </TabPane>
-
-                <TabPane tab="Your Events" key="2">
-                    <div className="p-6">
-                        <h3> Events Section</h3>
-                        {/* Your Events content goes here */}
-                    </div>
-                </TabPane>
-
-                <TabPane tab="Your Points" key="3">
-                    <div className="p-6">
-                        {/* Your Points content goes here */}
-                        <p><strong>Total Youth Points:</strong> {user?.youth_points || 0}</p>
-                    </div>
-                </TabPane>
-
-                <TabPane tab="Account Settings" key="4">
-                    <div className="p-6">
-                        <h3>Account Settings Section</h3>
-                        {/* Account Settings content goes here */}
-                    </div>
-                </TabPane>
-            </Tabs>
-
-            <style jsx>{`
-                .profile-header {
-                    background: linear-gradient(90deg, #ff7a59, #5a5d95);
-                    padding: 20px 40px;
-                    display: flex;
-                    align-items: center;
-                }
-
-                .avatar-container {
-                    position: relative;
-                    display: inline-block;
-                }
-
-                .camera-icon {
-                    position: absolute;
-                    bottom: 0;
-                    right: 0;
-                    border-radius: 50%;
-                }
-
-                .profile-sections {
-                    background-color: white;
-                    margin-top: 20px;
-                    border-radius: 8px;
-                    padding: 20px;
-                }
-
-                .section-title {
-                    font-size: 18px;
-                    color: #5a5d95;
-                    font-weight: bold;
-                }
-            `}</style>
-        </AuthenticatedLayout>
-    );
+      <GCashRedemptionModal
+        isVisible={isGCashModalVisible}
+        onClose={() => setIsGCashModalVisible(false)}
+        selectedOption={selectedRedemptionOption}
+        gcashName={gcashName}
+        setGcashName={setGcashName}
+        gcashNumber={gcashNumber}
+        setGcashNumber={setGcashNumber}
+        onRedeem={handleRedeemPoints}
+      />
+    </AuthenticatedLayout>
+  );
 }

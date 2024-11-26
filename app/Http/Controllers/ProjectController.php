@@ -17,7 +17,7 @@ class ProjectController extends Controller
         // Pass projects data to the Inertia page
         return Inertia::render('Projects', [
             'projects' => $projects,
-            'auth' => auth()->user(),
+          
         ]);
     }
 

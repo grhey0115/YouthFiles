@@ -6,6 +6,7 @@ use App\Filament\Resources\EventResource\Pages;
 use App\Filament\Resources\EventResource\Pages\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\EventResource\RelationManagers\PaymentsRelationManager;
 use App\Models\Event;
+use App\Models\CertificateSignature;
 use Filament\Resources\Resource;
 use Filament\Forms;
 use Filament\Resources\Form;
@@ -110,14 +111,81 @@ class EventResource extends Resource
                     'outreach' => 'Outreach',
                     'community' => 'Community Service',
                 ])
-                ->required()
+                ->required(),
                 
-        ]);
-            
+                Forms\Components\Section::make('Certificate Configuration')
+                ->schema([
+                    Forms\Components\Toggle::make('enable_certificates')
+                        ->label('Enable Certificates')
+                        ->default(false)
+                        ->reactive(),
+                    
+                    Forms\Components\Select::make('certificate_theme')
+                        ->label('Certificate Theme')
+                        ->options([
+                            'default' => 'Default (Minimalist)',
+                            'professional' => 'Professional (Corporate)',
+                            'elegant' => 'Elegant (Formal)',
+                            'modern' => 'Modern (Contemporary)',
+                            'classic' => 'Classic (Traditional)',
+                            'creative' => 'Creative (Artistic)',
+                        ])
+                        ->default('default')
+                        ->visible(fn ($get) => $get('enable_certificates') === true),
+                    
+                    Forms\Components\ColorPicker::make('certificate_primary_color')
+                        ->label('Primary Color')
+                        ->visible(fn ($get) => $get('enable_certificates') === true),
+                    
+                    Forms\Components\ColorPicker::make('certificate_secondary_color')
+                        ->label('Secondary Color')
+                        ->visible(fn ($get) => $get('enable_certificates') === true),
+                    
+                    Forms\Components\Select::make('certificate_orientation')
+                        ->label('Certificate Orientation')
+                        ->options([
+                            'landscape' => 'Landscape',
+                            'portrait' => 'Portrait',
+                        ])
+                        ->default('landscape')
+                        ->visible(fn ($get) => $get('enable_certificates') === true),
+                    
+                    Forms\Components\Select::make('certificate_paper_size')
+                        ->label('Paper Size')
+                        ->options([
+                            'a4' => 'A4',
+                            'letter' => 'Letter',
+                            'legal' => 'Legal',
+                        ])
+                        ->default('a4')
+                        ->visible(fn ($get) => $get('enable_certificates') === true),
 
-      
-            
-    }
+                    // Signatories Repeater
+                    Forms\Components\Repeater::make('certificateSignatories')
+                        ->relationship('certificateSignatories')
+                        ->schema([
+                            Forms\Components\TextInput::make('name')
+                                ->label('Signatory Name')
+                                ->required(),
+                            Forms\Components\TextInput::make('role')
+                                ->label('Signatory Role')
+                                ->required(),
+                            Forms\Components\FileUpload::make('signature_path')
+                                ->label('Signature')
+                                ->image()
+                                ->directory('signatures')
+                                ->required(),
+                        ])
+                        ->columns(3)
+                        ->addable(true)
+                        ->deletable(true)
+                        ->reorderable(true)
+                        ->defaultItems(1)
+                        ->visible(fn ($get) => $get('enable_certificates') === true)
+                ])
+                ->columns(2)
+        ]);
+}
 
     public static function table(Table $table): Table
     {

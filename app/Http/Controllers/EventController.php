@@ -30,7 +30,9 @@ class EventController extends Controller
     
         return Inertia::render('Dashboard', [
             'events' => $events,
-            'auth' => auth()->user(),
+           // 'auth' => auth()->user(),
+              // This will nest the user object correctly
+       
         ]);
     }
 
@@ -238,6 +240,11 @@ class EventController extends Controller
     
         return $pdf->download("Certificate-{$user->first_name}-{$user->last_name}.pdf");
     }
+    public function fetchUserEvents()
+        {
+            $userEvents = auth()->user()->events; // Assuming there is a many-to-many relationship defined
+            return response()->json($userEvents);
+        }
 
         
 }

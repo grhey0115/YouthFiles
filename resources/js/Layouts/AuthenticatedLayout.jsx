@@ -11,6 +11,7 @@ import {
     HomeOutlined,
     BellOutlined,
     LoadingOutlined,
+    CheckCircleOutlined,
 } from '@ant-design/icons';
 import ApplicationLogo from '@/Components/ApplicationLogo';
 import { Link, usePage } from '@inertiajs/react'; // Import route
@@ -219,12 +220,22 @@ export default function Authenticated({ header, children }) {
                         </Dropdown>
 
                         <Dropdown menu={userMenu} placement="bottomRight" trigger={['click']}>
-                            <Avatar
-                                src={user.avatar_url || '/default_avatar1.png'}
-                                size="large"
-                                icon={<UserOutlined />}
-                                style={{ cursor: 'pointer' }}
-                            />
+                            <div className="flex items-center cursor-pointer">
+                                <Avatar
+                                    src={user.avatar_url}
+                                    size="large"
+                                    icon={<UserOutlined />}
+                                />
+                                {user.is_verified && ( // Change to is_verified or another boolean field
+                                    <CheckCircleOutlined 
+                                        style={{ 
+                                            color: '#1877F2', // Facebook blue
+                                            marginLeft: '5px',
+                                            fontSize: '16px' 
+                                        }} 
+                                    />
+                                )}
+                            </div>
                         </Dropdown>
                     </Space>
                 </div>

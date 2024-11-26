@@ -85,4 +85,33 @@ class Users extends Authenticatable implements FilamentUser
             ? Storage::url($this->avatar)
             : 'https://via.placeholder.com/150'; // Default placeholder image
     }
+    public function getFullNameAttribute()
+    {
+        return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
+    }
+    public function emergencyRequests()
+    {
+        return $this->hasMany(EmergencyRequest::class);
+    }
+    public function pointsRedemptions()
+    {
+        return $this->hasMany(PointsRedemption::class);
+    }
+
+    // Points management methods
+    public function addYouthPoints($points)
+    {
+        $this->youth_points += $points;
+        $this->save();
+    }
+
+    public function deductYouthPoints($points)
+    {
+        if ($this->youth_points >= $points) {
+            $this->youth_points -= $points;
+            $this->save();
+            return true;
+        }
+        return false;
+    }
 }

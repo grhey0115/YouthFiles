@@ -2,22 +2,22 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\TanodRequestsResource\Pages;
-use App\Models\TanodRequests;
+use App\Filament\Resources\BorrowRequestsResource\Pages;
+use App\Models\BorrowRequests;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use App\Notifications\TanodRequestStatusNotification;
-use App\Notifications\TanodRequestReminderNotification;
+use App\Notifications\BorrowRequestStatusNotification;
+use App\Notifications\BorrowRequestReminderNotification;
 
-class TanodRequestsResource extends Resource
+class BorrowRequestsResource extends Resource
 {
-    protected static ?string $model = TanodRequests::class;
+    protected static ?string $model = BorrowRequests::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
 
     protected static ?string $navigationGroup = 'Community Services';
 
@@ -32,25 +32,25 @@ class TanodRequestsResource extends Resource
                             ->required()
                             ->searchable(),
 
-                        Forms\Components\TextInput::make('contact')
+                        Forms\Components\Select::make('item_id')
+                            ->relationship('item', 'name')
                             ->required()
-                            ->label('Contact Number'),
+                            ->searchable(),
 
-                        Forms\Components\Textarea::make('details')
+                        Forms\Components\Textarea::make('purpose')
                             ->required()
-                            ->label('Request Details')
+                            ->label('Purpose of Borrowing')
                             ->maxLength(500),
 
-                        Forms\Components\TextInput::make('place')
+                        Forms\Components\DatePicker::make('borrow_date')
                             ->required()
-                            ->label('Place of Request'),
+                            ->label('Borrow Date')
+                            ->minDate(now()),
 
-                        Forms\Components\FileUpload::make('request_letter')
+                        Forms\Components\DatePicker::make('return_date')
                             ->required()
-                            ->label('Request Letter')
-                            ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png'])
-                            ->disk('public')
-                            ->directory('tanod_requests'),
+                            ->label('Return Date')
+                            ->after('borrow_date'),
 
                         Forms\Components\Select::make('status')
                             ->options([
@@ -58,7 +58,7 @@ class TanodRequestsResource extends Resource
                                 'in_progress' => 'In Progress',
                                 'approved' => 'Approved',
                                 'rejected' => 'Rejected',
-                                'completed' => 'Completed'
+                                'returned' => 'Returned'
                             ])
                             ->required(),
 
@@ -73,15 +73,19 @@ class TanodRequestsResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user')
+                    ->label('Full Name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->getStateUsing(function ($record) {
+                        return trim("{$record->user->first_name} {$record->user->middle_name} {$record->user->last_name}");
+                    }),
 
-                Tables\Columns\TextColumn::make('contact')
-                    ->label('Contact Number'),
+                Tables\Columns\TextColumn::make('item.name')
+                    ->label('Item Name'),
 
-                Tables\Columns\TextColumn::make('place')
-                    ->label('Place of Request'),
+                Tables\Columns\TextColumn::make('purpose')
+                    ->label('Purpose of Borrowing'),
 
                 Tables\Columns\BadgeColumn::make('status')
                     ->colors([
@@ -89,7 +93,7 @@ class TanodRequestsResource extends Resource
                         'info' => 'in_progress',
                         'success' => 'approved',
                         'danger' => 'rejected',
-                        'primary' => 'completed',
+                        'primary' => 'returned',
                     ]),
 
                 Tables\Columns\TextColumn::make('created_at')
@@ -103,45 +107,45 @@ class TanodRequestsResource extends Resource
                         'in_progress' => 'In Progress',
                         'approved' => 'Approved',
                         'rejected' => 'Rejected',
-                        'completed' => 'Completed'
+                        'returned' => 'Returned'
                     ]),
             ])
             ->actions([
                 // Approve Action
                 Tables\Actions\Action::make('approve')
-                    ->action(function (TanodRequests $record) {
+                    ->action(function (BorrowRequests $record) {
                         $record->update([
                             'status' => 'approved',
                             'approved_at' => now(),
                         ]);
 
                         // Notify the user
-                        $record->user->notify(new TanodRequestStatusNotification('approved'));
+                        $record->user->notify(new BorrowRequestStatusNotification('approved'));
 
                         Notification::make()
-                            ->title('Tanod Request Approved')
+                            ->title('Borrow Request Approved')
                             ->success()
-                            ->body("The Tanod request has been approved.")
+                            ->body("The borrow request has been approved.")
                             ->send();
                     })
                     ->requiresConfirmation()
-                    ->visible(fn (TanodRequests $record) => $record->status === 'pending'),
+                    ->visible(fn (BorrowRequests $record) => $record->status === 'pending'),
 
                 // Reject Action
                 Tables\Actions\Action::make('reject')
-                    ->action(function (TanodRequests $record, array $data) {
+                    ->action(function (BorrowRequests $record, array $data) {
                         $record->update([
                             'status' => 'rejected',
                             'admin_remarks' => $data['remarks'] ?? null,
                         ]);
 
                         // Notify the user
-                        $record->user->notify(new TanodRequestStatusNotification('rejected', $data['remarks']));
+                        $record->user->notify(new BorrowRequestStatusNotification('rejected', $data['remarks']));
 
                         Notification::make()
-                            ->title('Tanod Request Rejected')
+                            ->title('Borrow Request Rejected')
                             ->danger()
-                            ->body("The Tanod request has been rejected.")
+                            ->body("The borrow request has been rejected.")
                             ->send();
                     })
                     ->form([
@@ -150,56 +154,37 @@ class TanodRequestsResource extends Resource
                             ->required(),
                     ])
                     ->requiresConfirmation()
-                    ->visible(fn (TanodRequests $record) => $record->status === 'pending'),
+                    ->visible(fn (BorrowRequests $record) => $record->status === 'pending'),
 
-                // Mark as In Progress Action
-                Tables\Actions\Action::make('mark_in_progress')
-                    ->action(function (TanodRequests $record) {
+
+                // Mark as Returned Action
+                Tables\Actions\Action::make('mark_returned')
+                    ->action(function (BorrowRequests $record) {
                         $record->update([
-                            'status' => 'in_progress',
-                            'in_progress_at' => now(),
+                            'status' => 'returned',
+                            'returned_at' => now(),
                         ]);
 
                         // Notify the user
-                        $record->user->notify(new TanodRequestStatusNotification('in_progress'));
+                        $record->user->notify(new BorrowRequestStatusNotification('returned'));
 
                         Notification::make()
-                            ->title('Tanod Request In Progress')
-                            ->info()
-                            ->body("The Tanod request is now in progress.")
-                            ->send();
-                    })
-                    ->requiresConfirmation()
-                    ->visible(fn (TanodRequests $record) => $record->status === 'approved'),
-
-                // Mark as Completed Action
-                Tables\Actions\Action::make('mark_completed')
-                    ->action(function (TanodRequests $record) {
-                        $record->update([
-                            'status' => 'completed',
-                            'completed_at' => now(),
-                        ]);
-
-                        // Notify the user
-                        $record->user->notify(new TanodRequestStatusNotification('completed'));
-
-                        Notification::make()
-                            ->title('Tanod Request Completed')
+                            ->title('Borrow Request Returned')
                             ->success()
-                            ->body("The Tanod request has been completed.")
+                            ->body("The borrow request has been marked as returned.")
                             ->send();
                     })
                     ->requiresConfirmation()
-                    ->visible(fn (TanodRequests $record) => $record->status === 'in_progress'),
+                    ->visible(fn (BorrowRequests $record) => $record->status === 'approved'),
 
                 // Remind Action
                 Tables\Actions\Action::make('remind')
-                    ->action(function (TanodRequests $record) {
-                        $title = "Tanod Request Reminder";
-                        $message = "This is a reminder about your Tanod service request.";
+                    ->action(function (BorrowRequests $record) {
+                        $title = "Borrow Request Reminder";
+                        $message = "This is a reminder about your borrow request.";
                         
                         // Notify the user
-                        $record->user->notify(new TanodRequestReminderNotification($title, $message));
+                        $record->user->notify(new BorrowRequestReminderNotification($title, $message));
 
                         Notification::make()
                             ->title('Reminder Sent')
@@ -208,7 +193,7 @@ class TanodRequestsResource extends Resource
                             ->send();
                     })
                     ->requiresConfirmation()
-                    ->visible(fn (TanodRequests $record) => in_array($record->status, ['approved', 'in_progress'])),
+                    ->visible(fn (BorrowRequests $record) => in_array($record->status, ['approved', 'in_progress'])),
 
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
@@ -219,10 +204,10 @@ class TanodRequestsResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTanodRequests::route('/'),
-            'create' => Pages\CreateTanodRequests::route('/create'),
-            'view' => Pages\ViewTanodRequests::route('/{record}'),
-            'edit' => Pages\EditTanodRequests::route('/{record}/edit'),
+            'index' => Pages\ListBorrowRequests::route('/'),
+            'create' => Pages\CreateBorrowRequests::route('/create'),
+            'view' => Pages\ViewBorrowRequests::route('/{record}'),
+            'edit' => Pages\EditBorrowRequests::route('/{record}/edit'),
         ];
     }
 }

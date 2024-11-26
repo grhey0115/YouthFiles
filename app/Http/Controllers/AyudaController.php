@@ -34,7 +34,7 @@ class AyudaController extends Controller
                 return Inertia::render('Ayuda', [
                     'openAyudas' => $openAyudas,  // Pass Open assistance
                     'closedAyudas' => $closedAyudas,  // Pass Closed assistance
-                    'auth' => auth()->user(),
+                   
                 ]);
             }
 

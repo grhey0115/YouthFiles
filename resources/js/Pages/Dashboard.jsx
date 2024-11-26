@@ -78,12 +78,17 @@ const StyledPaginationContainer = styled.div`
   }
 `;
 const Dashboard = () => {
-  const { events } = usePage().props;
+  const { auth, events } = usePage().props;
   const [activeTab, setActiveTab] = useState("upcoming");
   const [upcomingPage, setUpcomingPage] = useState(1);
   const [pastPage, setPastPage] = useState(1);
   const itemsPerPage = 8;
 
+  console.log('Full usePage props:', usePage().props);
+  console.log('Auth object:', auth);
+  console.log('User object:', auth?.user);
+
+  // Ensure you have a fallback
   const handleTabChange = (key) => {
     setActiveTab(key);
   };
@@ -149,7 +154,7 @@ const Dashboard = () => {
 
   return (
     <ErrorBoundary>
-      <AuthenticatedLayout user={usePage().props.auth}>
+     <AuthenticatedLayout user={auth}>
         <Head title="Dashboard" />
 
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>

@@ -222,27 +222,43 @@ class ProfileController extends Controller
     }
 
     public function updateAvatar(Request $request)
-    {
-        \Log::info('Received request to update avatar.');
-
-        if ($request->hasFile('avatar')) {
-            \Log::info('Avatar file received.');
+        {
+            \Log::info('Received request to update avatar.');
 
             $request->validate([
                 'avatar' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
             ]);
 
-            $avatarName = $request->user()->id.'_avatar'.time().'.'.$request->avatar->extension();
-            $request->avatar->storeAs('avatars', $avatarName, 'public');
+            try {
+                $user = $request->user();
 
-            $user = $request->user();
-            $user->avatar = $avatarName;
-            $user->save();
+                // Delete existing avatar if it exists
+                if ($user->avatar) {
+                    Storage::disk('public')->delete('avatars/' . $user->avatar);
+                }
 
-            return response()->json(['success' => 'Avatar updated successfully']);
-        } else {
-            \Log::warning('No avatar file received.');
-            return response()->json(['error' => 'Avatar file is required.'], 422);
+                // Generate unique filename
+                $avatarName = $user->id.'_avatar'.time().'.'.$request->avatar->extension();
+                
+                // Store the new avatar
+                $path = $request->avatar->storeAs('avatars', $avatarName, 'public');
+
+                // Update user's avatar
+                $user->avatar = $avatarName;
+                $user->save();
+
+                // Return full URL of the avatar
+                return response()->json([
+                    'message' => 'Avatar updated successfully',
+                    'avatar' => Storage::url('avatars/' . $avatarName)
+                ]);
+            } catch (\Exception $e) {
+                \Log::error('Avatar upload error: ' . $e->getMessage());
+
+                return response()->json([
+                    'error' => 'Failed to upload avatar',
+                    'message' => config('app.debug') ? $e->getMessage() : 'An unexpected error occurred'
+                ], 500);
+            }
         }
-    }
 }
