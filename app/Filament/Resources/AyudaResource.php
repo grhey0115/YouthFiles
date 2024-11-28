@@ -106,12 +106,17 @@ class AyudaResource extends Resource
                 ->required(),
 
             Forms\Components\DateTimePicker::make('date_start')
-                ->label('Start Date and Time')
+                ->label('Start of Registration')
                 ->required(),
 
             Forms\Components\DateTimePicker::make('date_end')
-                ->label('End Date and Time')
+                ->label('End of Registration')
                 ->required(),
+
+                Forms\Components\DateTimePicker::make('assistance_date')
+                ->label('Assistance Date')
+                ->required()
+                ->helperText('Select the date when the assistance is provided.'),
 
             // Requirements Repeater
             TableRepeater::make('requirements')
@@ -241,21 +246,21 @@ class AyudaResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('title')->label('Title'),
                 Tables\Columns\TextColumn::make('sector')->label('Sector'),
-                Tables\Columns\TextColumn::make('date_start')
-                    ->label('Start Date')
+                Tables\Columns\TextColumn::make('assistance_date')
+                    ->label('Date of Assistance')
                     ->dateTime(),
-                Tables\Columns\TextColumn::make('date_end')
-                    ->label('End Date')
-                    ->dateTime(),
+                
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\Action::make('viewApplicants')
                     ->label('View Applicants')
                     ->url(fn (Ayuda $record) => route('filament.admin.resources.ayudas.view', ['record' => $record->getKey()])),
             ])
+            ->defaultSort('created_at', 'desc')
             ->bulkActions([
                 Tables\Actions\DeleteBulkAction::make(),
             ]);

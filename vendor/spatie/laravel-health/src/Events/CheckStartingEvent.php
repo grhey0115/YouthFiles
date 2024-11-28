@@ -6,5 +6,7 @@ use Spatie\Health\Checks\Check;
 
 class CheckStartingEvent
 {
-    public function __construct(public Check $check) {}
+    public function __construct(public Check $check)
+    {
+    }
 }

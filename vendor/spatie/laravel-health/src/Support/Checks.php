@@ -12,5 +12,7 @@ class Checks extends Collection
         parent::__construct($checks);
     }
 
-    public function run(): void {}
+    public function run(): void
+    {
+    }
 }

@@ -26,7 +26,8 @@ class Result
         public Status $status,
         public string $notificationMessage = '',
         public string $shortSummary = '',
-    ) {}
+    ) {
+    }
 
     public function shortSummary(string $shortSummary): self
     {
@@ -99,13 +100,6 @@ class Result
     public function meta(array $meta): self
     {
         $this->meta = $meta;
-
-        return $this;
-    }
-
-    public function appendMeta($meta): self
-    {
-        $this->meta = array_merge($this->meta, $meta);
 
         return $this;
     }

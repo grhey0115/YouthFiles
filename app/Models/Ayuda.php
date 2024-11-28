@@ -20,7 +20,8 @@ class Ayuda extends Model
         'sector',                 // Sector (e.g., Education, Health)
         'filter',                 // Eligibility filter
         'date_start',             // Start date
-        'date_end',               // End date
+        'date_end', 
+        'assistance_date',              // End date
         'max_beneficiaries', 
         'official_in_charge',
         'current_beneficiaries',      // Maximum number of beneficiaries

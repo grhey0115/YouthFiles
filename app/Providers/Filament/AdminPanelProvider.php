@@ -19,6 +19,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
+use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
 use Filament\Navigation\MenuItem;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
 
@@ -64,9 +66,10 @@ class AdminPanelProvider extends PanelProvider
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 \Hasnayeen\Themes\ThemesPlugin::make(),
                 FilamentSpatieLaravelHealthPlugin::make(),
-              //  GlobalSearchModalPlugin::make()
+              GlobalSearchModalPlugin::make(),
                // ->closeByEscaping(enabled: false)
- 
+               FilamentApexChartsPlugin::make(),
+               FilamentFullCalendarPlugin::make(),
             ])
 
             ->databaseNotifications()

@@ -165,3 +165,27 @@ To disable this behavior, you may override the `$isLazy` property on the widget 
 ```php
 protected static bool $isLazy = false;
 ```
+
+## Adding a header and description
+
+You may also add a header and description text above the widget by overriding the `$header` and `$description` properties:
+
+```php
+protected ?string $header = 'Analytics';
+
+protected ?string $description = 'An overview of some analytics.';
+```
+
+If you need to dynamically generated the header or description text, you can instead override the `getHeader()` and `getDescription()` methods:
+
+```php
+protected function getHeader(): ?string
+{
+    return 'Analytics';
+}
+
+protected function getDescription(): ?string
+{
+    return 'An overview of some analytics.';
+}
+```

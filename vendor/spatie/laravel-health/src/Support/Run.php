@@ -2,4 +2,6 @@
 
 namespace Spatie\Health\Support;
 
-class Run {}
+class Run
+{
+}

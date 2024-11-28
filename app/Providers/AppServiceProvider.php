@@ -9,6 +9,12 @@ use Spatie\Health\Facades\Health;
 use Spatie\Health\Checks\Checks\OptimizedAppCheck;
 use Spatie\Health\Checks\Checks\DebugModeCheck;
 use Spatie\Health\Checks\Checks\EnvironmentCheck;
+use Spatie\Health\Checks\Checks\UsedDiskSpaceCheck;
+use Spatie\Health\Checks\Checks\DatabaseConnectionCountCheck;
+use Spatie\Health\Checks\Checks\FlareErrorOccurrenceCountCheck;
+use Spatie\SecurityAdvisoriesHealthCheck\SecurityAdvisoriesCheck;
+use Spatie\CpuLoadHealthCheck\CpuLoadCheck;
+use Spatie\Health\Checks\Checks\DatabaseCheck;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Storage;
  
@@ -33,6 +39,12 @@ class AppServiceProvider extends ServiceProvider
             OptimizedAppCheck::new(),
             DebugModeCheck::new(),
             EnvironmentCheck::new(),
+            UsedDiskSpaceCheck::new(),
+            DatabaseCheck::new(),
+            DatabaseConnectionCountCheck::new(),
+            FlareErrorOccurrenceCountCheck::new(),
+            SecurityAdvisoriesCheck::new(),
+            CpuLoadCheck::new(),
         ]);
 
         Inertia::share([

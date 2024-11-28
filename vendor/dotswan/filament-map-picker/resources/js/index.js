@@ -9,12 +9,26 @@ document.addEventListener('DOMContentLoaded', () => {
             map: null,
             tile: null,
             marker: null,
+            rangeCircle: null,
             drawItems: null,
+            rangeSelectField: null,
 
             createMap: function (el) {
                 const that = this;
 
                 this.map = L.map(el, config.controls);
+
+                if(config.bounds)
+                {
+                    let southWest = L.latLng(config.bounds.sw.lat, config.bounds.sw.lng);
+                    let northEast = L.latLng(config.bounds.ne.lat, config.bounds.ne.lng);
+                    let bounds = L.latLngBounds(southWest, northEast);
+                    this.map.setMaxBounds(bounds);
+                    this.map.fitBounds(bounds);
+                    this.map.on('drag', function() {
+                        map.panInsideBounds(bounds, { animate: false });
+                    });
+                }
                 this.map.on('load', () => {
                     setTimeout(() => this.map.invalidateSize(true), 0);
                     if (config.showMarker) {
@@ -24,6 +38,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!config.draggable) {
                     this.map.dragging.disable();
+                }
+
+                if(config.clickable)
+                {
+                    this.map.on('click', function(e) {
+                        that.setCoordinates(e.latlng);
+                    });
                 }
 
                 this.tile = L.tileLayer(config.tilesUrl, {
@@ -48,7 +69,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         draggable: false,
                         autoPan: true
                     }).addTo(this.map);
-                    this.map.on('move', () => this.marker.setLatLng(this.map.getCenter()));
+                    this.setMarkerRange();
+                    if(!config.clickable)
+                    {
+                        this.map.on('move', () => this.setCoordinates(this.map.getCenter()));
+                    }
                 }
 
                 this.map.on('moveend', () => setTimeout(() => this.updateLocation(), 500));
@@ -81,8 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Geoman setup
                 if (config.geoMan.show) {
-                        this.map.pm.addControls({  
-                            position: config.geoMan.position,  
+                        this.map.pm.addControls({
+                            position: config.geoMan.position,
                             drawCircleMarker: config.geoMan.drawCircleMarker,
                             rotateMode: config.geoMan.rotateMode,
                             drawMarker: config.geoMan.drawMarker,
@@ -93,7 +118,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             dragMode: config.geoMan.dragMode,
                             cutPolygon: config.geoMan.cutPolygon,
                             editPolygon: config.geoMan.editPolygon,
-                            deleteLayer: config.geoMan.deleteLayer 
+                            deleteLayer: config.geoMan.deleteLayer
                         });
 
                         this.drawItems = new L.FeatureGroup().addTo(this.map);
@@ -137,19 +162,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                             color: config.geoMan.color || "#3388ff",
                                             fillColor: config.geoMan.filledColor || 'blue',
                                             weight: 2,
-                                            fillOpacity: 0.4   
+                                            fillOpacity: 0.4
                                         };
                                     }
                                 },
                                 onEachFeature: (feature, layer) => {
-     
+
                                     if (feature.geometry.type === 'Polygon') {
                                         layer.bindPopup("Polygon Area");
                                     } else if (feature.geometry.type === 'Point') {
                                         layer.bindPopup("Point Location");
                                     }
-                                    
-                   
+
+
                                     if (config.geoMan.editable) {
                                         if (feature.geometry.type === 'Polygon') {
                                             layer.pm.enable({
@@ -161,7 +186,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                             });
                                         }
                                     }
-                        
+
                                     layer.on('pm:edit', () => {
                                         this.updateGeoJson();
                                     });
@@ -176,7 +201,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                     });
                                 });
                             }
-                            
+
                             this.map.fitBounds(this.drawItems.getBounds());
                     }
               }
@@ -250,6 +275,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 return location;
             },
 
+            setCoordinates: function (coords) {
+
+                $wire.set(config.statePath, {
+                    ...$wire.get(config.statePath),
+                    lat: coords.lat,
+                    lng: coords.lng
+                }, false);
+
+                if (config.liveLocation.send) {
+                    $wire.$refresh();
+                }
+                this.updateMarker();
+                return coords;
+            },
+
             attach: function (el) {
                 this.createMap(el);
                 const observer = new IntersectionObserver(entries => {
@@ -294,16 +334,34 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.map.getContainer().appendChild(locationButton);
             },
 
+            setMarkerRange: function () {
+                distance=parseInt(this.rangeSelectField.value || 0 ) ;
+                if (this.rangeCircle) {
+                    this.rangeCircle.setLatLng(this.getCoordinates()).setRadius(distance);
+                } else {
+                    this.rangeCircle = L.circle(this.getCoordinates(), {
+                        color: 'blue',
+                        fillColor: '#f03',
+                        fillOpacity: 0.5,
+                        radius: distance // The radius in meters
+                    }).addTo(this.map);
+                }
+            },
+
             init: function() {
                 this.$wire = $wire;
                 this.config = config;
                 this.state = state;
+                this.rangeSelectField = document.getElementById(config.rangeSelectField || 'data.distance');
+                let that=this
+                this.rangeSelectField.addEventListener('change', function () {that.updateMarker(); });
                 $wire.on('refreshMap', this.refreshMap.bind(this));
             },
 
             updateMarker: function() {
                 if (config.showMarker) {
                     this.marker.setLatLng(this.getCoordinates());
+                    this.setMarkerRange();
                     setTimeout(() => this.updateLocation(), 500);
                 }
             },

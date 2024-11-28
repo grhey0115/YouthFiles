@@ -28,7 +28,8 @@ class StoredCheckResult
         public string $shortSummary = '',
         public string $status = '',
         public array $meta = [],
-    ) {}
+    ) {
+    }
 
     public function notificationMessage(string $message): self
     {

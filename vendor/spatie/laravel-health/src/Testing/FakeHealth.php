@@ -16,7 +16,8 @@ class FakeHealth extends Health
     public function __construct(
         private Health $decoratedHealth,
         private array $fakeChecks
-    ) {}
+    ) {
+    }
 
     public function registeredChecks(): Collection
     {
