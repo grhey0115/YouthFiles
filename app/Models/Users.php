@@ -10,6 +10,7 @@ use Illuminate\Notifications\Notifiable;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Filament\Models\Contracts\FilamentUser;
 
+
 class Users extends Authenticatable implements FilamentUser
 {
     use HasFactory, Notifiable, HasRoles, HasPanelShield;

@@ -16,6 +16,7 @@ class CertificateResource extends Resource
 
     protected static ?string $navigationLabel = 'Certificates';
     protected static ?string $navigationGroup = 'Management';
+    
     protected static bool $shouldRegisterNavigation = false;
     public static function form(Forms\Form $form): Forms\Form
     {

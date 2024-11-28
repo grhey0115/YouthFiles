@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BudgetResource\Pages;
 use App\Models\Budget;
+use App\Models\User;
 use App\Models\Disbursement;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -23,6 +24,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Illuminate\Support\Str;
+use Filament\Forms\Components\Placeholder;
+use Carbon\Carbon;
 
 class BudgetResource extends Resource
 {
@@ -37,59 +40,270 @@ class BudgetResource extends Resource
     {
         return $form
             ->schema([
-                TextInput::make('budget_id')
-                    ->label('Budget ID')
-                    ->required()
-                    ->regex('/^[A-Za-z0-9]+$/')
-                    ->unique(Budget::class, 'budget_id', ignoreRecord: true), // Ignore the current record when editing
-                  
-                TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make('Budget Details')
+                            ->schema([
+                                TextInput::make('budget_id')
+                                    ->label('Budget ID')
+                                    ->required()
+                                    ->unique(Budget::class, 'budget_id', ignoreRecord: true)
+                                    ->placeholder('BUDGET-' . now()->format('YmdHis'))
+                                    ->helperText('A unique identifier for the budget. Will be auto-generated if left blank.')
+                                    ->prefix('BUDGET-')
+                                    ->autofocus(),
     
-                Forms\Components\Textarea::make('description')
-                    ->nullable(),
+                                TextInput::make('name')
+                                    ->label('Budget Name')
+                                    ->required()
+                                    ->maxLength(255)
+                                    ->placeholder('Enter budget name')
+                                    ->rules(['min:3']),
     
-                TextInput::make('total_amount')
-                    ->numeric()
-                    ->prefix('₱')
-                    ->required(),
+                                Forms\Components\Textarea::make('description')
+                                    ->label('Budget Description')
+                                    ->nullable()
+                                    ->rows(3)
+                                    ->placeholder('Provide a brief description of the budget purpose')
+                                    ->maxLength(500),
+                            ])
+                            ->columns(2),
     
-                Forms\Components\DatePicker::make('start_date')
-                    ->required(),
+                        Forms\Components\Section::make('Financial Information')
+                            ->schema([
+                                TextInput::make('total_amount')
+                        ->label('Total Budget Amount')
+                        ->required()
+                        ->numeric()
+                        ->prefix('₱')
+                        ->minValue(0)
+                        ->step(0.01)
+                        ->placeholder('0.00')
+                        ->live(onBlur: true)
+                        ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                            $contingencyPercentage = $get('contingency_percentage') ?? 5;
+                            $contingencyAmount = $state * ($contingencyPercentage / 100);
+                            $set('contingency_amount', number_format($contingencyAmount, 2, '.', ''));
+                        }),
+
+                   
+                ])
+                            ->columns(2),
+                            Forms\Components\Section::make('Budget Timeline')
+                            ->schema([
+                                Forms\Components\DatePicker::make('start_date')
+                                    ->label('Budget Start Date')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('M d, Y')
+                                    ->closeOnDateSelection()
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                        $endDate = $get('end_date');
+                                        if ($state && $endDate) {
+                                            $duration = Carbon::parse($state)->diffInDays(Carbon::parse($endDate));
+                                            $set('duration', $duration . ' days');
+                                        }
+                                    }),
+                        
+                                Forms\Components\DatePicker::make('end_date')
+                                    ->label('Budget End Date')
+                                    ->required()
+                                    ->native(false)
+                                    ->displayFormat('M d, Y')
+                                    ->closeOnDateSelection()
+                                    ->live(onBlur: true)
+                                    ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                        $startDate = $get('start_date');
+                                        if ($startDate && $state) {
+                                            $duration = Carbon::parse($startDate)->diffInDays(Carbon::parse($state));
+                                            $set('duration', $duration . ' days');
+                                        }
+                                    }),
+                        
+                                Forms\Components\TextInput::make('duration')
+                                    ->label('Budget Duration')
+                                    ->disabled()
+                                    ->dehydrated(false),
+                            ])
+                            ->columns(3),
+                    ])
+                    ->columnSpan(['lg' => 2]),
     
-                Forms\Components\DatePicker::make('end_date')
-                    ->required(),
-            ]);
+                Forms\Components\Group::make()
+                    ->schema([
+                        Forms\Components\Section::make('Budget Allocation Tracking')
+                            ->schema([
+                                Forms\Components\Placeholder::make('total_allocated')
+                                    ->label('Total Allocated')
+                                    ->content(function ($record) {
+                                        return $record 
+                                            ? '₱ ' . number_format($record->projects->sum('total_budget'), 2)
+                                            : '₱ 0.00';
+                                    }),
+    
+                                Forms\Components\Placeholder::make('total_disbursed')
+                                    ->label('Total Disbursed')
+                                    ->content(function ($record) {
+                                        return $record 
+                                            ? '₱ ' . number_format($record->projects->flatMap->disbursements->sum('disbursed_amount'), 2)
+                                            : '₱ 0.00';
+                                    }),
+    
+                                Forms\Components\Placeholder::make('remaining_balance')
+                                    ->label('Remaining Balance')
+                                    ->content(function ($record) {
+                                        if (!$record) return '₱ 0.00';
+                                        
+                                        $totalBudget = $record->total_amount;
+                                        $totalDisbursed = $record->projects->flatMap->disbursements->sum('disbursed_amount');
+                                        $remainingBalance = $totalBudget - $totalDisbursed;
+                                        
+                                        return '₱ ' . number_format($remainingBalance, 2);
+                                    })
+                                    
+                            ])
+                            ->columns(1),
+    
+                        Forms\Components\Section::make('Additional Information')
+                            ->schema([
+                                Forms\Components\Select::make('status')
+                                    ->label('Budget Status')
+                                    ->options([
+                                        'draft' => 'Draft',
+                                        'active' => 'Active',
+                                        'completed' => 'Completed',
+                                        'on_hold' => 'On Hold',
+                                    ])
+                                    ->default('draft')
+                                    ->required(),
+    
+                                Forms\Components\Select::make('funding_source')
+                                    ->label('Funding Source')
+                                    ->options([
+                                        'internal' => 'Internal Funds',
+                                        'grant' => 'Grant',
+                                        'donation' => 'Donation',
+                                        'government' => 'Government Allocation',
+                                        'other' => 'Other',
+                                    ])
+                                    ->required(),
+                            ])
+                            ->columns(2),
+                    ])
+                    ->columnSpan(['lg' => 1]),
+            ])
+            ->columns(3);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-
-                TextColumn::make('budget_id')
-                ->label('Budget ID')
-                ->sortable(),
-
-                TextColumn::make('name')->sortable(),
-
-                // Display total amount as PHP currency
-                TextColumn::make('total_amount')
-                    ->label('Total Amount')
-                    ->money('PHP', true)
+                Tables\Columns\TextColumn::make('budget_id')
+                    ->label('Budget ID')
+                    ->searchable()
+                    ->sortable()
+                    ->badge()
+                    ->color('primary'),
+    
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Budget Name')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(),
+    
+                Tables\Columns\TextColumn::make('total_amount')
+                    ->label('Total Budget')
+                    ->money('PHP')
+                    ->color('success')
                     ->sortable(),
-
-                // Display dynamically calculated remaining amount as PHP currency
-                TextColumn::make('remaining_amount')
+    
+                Tables\Columns\TextColumn::make('remaining_amount')
                     ->label('Remaining Amount')
-                    ->money('PHP', true)
-                   
+                    ->money('PHP')
+                    ->badge()
+                    ->color(fn ($state) => $state <= 0 ? 'danger' : 'success')
                     ->sortable(),
-
-                TextColumn::make('start_date')->date()->sortable(),
-                TextColumn::make('end_date')->date()->sortable(),
-                TextColumn::make('user.name')->label('Created By'),
+    
+                Tables\Columns\TextColumn::make('start_date')
+                    ->label('Start Date')
+                    ->date('M d, Y')
+                    ->sortable(),
+    
+                Tables\Columns\TextColumn::make('end_date')
+                    ->label('End Date')
+                    ->date('M d, Y')
+                    ->color('danger')
+                    ->sortable(),
+    
+                Tables\Columns\TextColumn::make('user.name')
+                    ->label('Created By')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+    
+                Tables\Columns\TextColumn::make('projects_count')
+                    ->label('Total Projects')
+                    ->counts('projects')
+                    ->badge()
+                    ->color('primary')
+                    ->sortable(),
+    
+                Tables\Columns\TextColumn::make('projects_total_budget')
+                    ->label('Allocated to Projects')
+                    ->getStateUsing(fn ($record) => $record->projects->sum('total_budget'))
+                    ->money('PHP')
+                    ->color('warning')
+                    ->toggleable(isToggledHiddenByDefault: true),
+    
+                Tables\Columns\TextColumn::make('total_disbursed')
+                    ->label('Total Disbursed')
+                    ->getStateUsing(fn ($record) => $record->projects->flatMap->disbursements->sum('disbursed_amount'))
+                    ->money('PHP')
+                    ->badge()
+                    ->color('danger')
+                    ->sortable(),
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
+                
+                Tables\Filters\Filter::make('date_range')
+                    ->form([
+                        Forms\Components\DatePicker::make('start_date')
+                            ->label('Start Date From'),
+                        Forms\Components\DatePicker::make('end_date')
+                            ->label('End Date To'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['start_date'],
+                                fn (Builder $query, $date): Builder => $query->where('start_date', '>=', $date)
+                            )
+                            ->when(
+                                $data['end_date'],
+                                fn (Builder $query, $date): Builder => $query->where('end_date', '<=', $date)
+                            );
+                    }),
+                
+                Tables\Filters\Filter::make('budget_status')
+                    ->form([
+                        Forms\Components\Select::make('status')
+                            ->options([
+                                'active' => 'Active',
+                                'exhausted' => 'Exhausted',
+                                'pending' => 'Pending',
+                            ])
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        if ($data['status'] === 'active') {
+                            return $query->where('remaining_amount', '>', 0);
+                        }
+                        if ($data['status'] === 'exhausted') {
+                            return $query->where('remaining_amount', '<=', 0);
+                        }
+                        return $query;
+                    }),
             ])
             ->defaultSort('created_at', 'desc')
       

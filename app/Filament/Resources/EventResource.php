@@ -187,57 +187,144 @@ class EventResource extends Resource
         ]);
 }
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Event Name'),
-             
-                Tables\Columns\TextColumn::make('start_time')->dateTime()->label('Start Time'),
-                Tables\Columns\TextColumn::make('end_time')->dateTime()->label('End Time')
-                ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                ->label('Status')
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            Tables\Columns\ImageColumn::make('header_image')
+                ->label('Header')
+                ->circular()
+                ->toggleable(),
+
+            Tables\Columns\TextColumn::make('name')
+                ->label('Event Name')
+                ->searchable()
                 ->sortable()
-                ->color(function ($state) {
-                    return $state === 'ongoing' ? 'success' : ($state === 'ended' ? 'danger' : 'gray');
-                }), // 
-                Tables\Columns\TextColumn::make('registration_fee')->label('Registration Fee')->money('PHP'), // Display registration fee
-                Tables\Columns\TextColumn::make('slots') // Display available slots in table
-                    ->label('Available Slots')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('users_count')
-                    ->label('Participants')
-                    ->counts('users')
-                    ->sortable(),
+                ->wrap(),
 
-                Tables\Columns\TextColumn::make('type')
+            Tables\Columns\BadgeColumn::make('type')
                 ->label('Event Type')
+                ->icon(fn (string $state): string => match ($state) {
+                    'seminar' => 'heroicon-m-academic-cap',
+                    'workshop' => 'heroicon-m-wrench',
+                    'sports' => 'heroicon-m-trophy',
+                    'community_service' => 'heroicon-m-heart',
+                    default => 'heroicon-m-globe-alt'
+                })
+                ->color(fn (string $state): string => match ($state) {
+                    'seminar' => 'primary',
+                    'workshop' => 'success',
+                    'sports' => 'warning',
+                    'community_service' => 'danger',
+                    default => 'secondary'
+                }),
+
+            Tables\Columns\BadgeColumn::make('category')
+                ->label('Category')
+                ->color(fn (string $state): string => match ($state) {
+                    'sports' => 'warning',
+                    'education' => 'primary',
+                    'outreach' => 'success',
+                    'community' => 'danger',
+                    default => 'secondary'
+                }),
+
+            Tables\Columns\BadgeColumn::make('status')
+                ->label('Status')
+                ->color(fn (string $state): string => match ($state) {
+                    'draft' => 'gray',
+                    'published' => 'primary',
+                    'ongoing' => 'success',
+                    'ended' => 'danger',
+                    'canceled' => 'warning',
+                    default => 'secondary'
+                }),
+
+            Tables\Columns\TextColumn::make('start_time')
+                ->label('Start Time')
+                ->dateTime('M d, Y H:i')
                 ->sortable(),
 
-            // Display Event Category in Table
-            Tables\Columns\TextColumn::make('category')
-                ->label('Event Category')
+            Tables\Columns\TextColumn::make('end_time')
+                ->label('End Time')
+                ->dateTime('M d, Y H:i')
                 ->sortable(),
-            ])
-            ->defaultSort('created_at', 'desc')
-            ->filters([
-                // Add any table filters if needed
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-             //   Tables\Actions\Action::make('viewParticipants')
-                 //   ->label('View Participants')
-                  //  ->url(fn (Event $record) => route('filament.resources.events.relationManager', [$record->getKey()]))
-                  //  ->icon('heroicon-o-users')
-                  Tables\Actions\deleteAction::make(),
-            ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+
+            Tables\Columns\TextColumn::make('registration_fee')
+                ->label('Reg. Fee')
+                ->money('PHP')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('slots')
+                ->label('Slots')
+                ->badge()
+                ->color(fn ($state) => $state <= 5 ? 'danger' : 'success')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('users_count')
+                ->label('Participants')
+                ->counts('users')
+                ->badge()
+                ->color(fn ($state, $record) => $state >= $record->slots ? 'danger' : 'primary')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('youth_points')
+                ->label('Youth Points')
+                ->badge()
+                ->color('info')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('location')
+                ->label('Location')
+                ->limit(20)
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
+        ->defaultSort('start_time', 'desc')
+        ->filters([
+            Tables\Filters\SelectFilter::make('type')
+                ->options([
+                    'seminar' => 'Seminar',
+                    'workshop' => 'Workshop',
+                    'sports' => 'Sports',
+                    'community_service' => 'Community Service',
                 ]),
-            ]);
-    }
+            
+            Tables\Filters\SelectFilter::make('category')
+                ->options([
+                    'sports' => 'Sports',
+                    'education' => 'Education',
+                    'outreach' => 'Outreach',
+                    'community' => 'Community Service',
+                ]),
+            
+            Tables\Filters\SelectFilter::make('status')
+                ->options([
+                    'draft' => 'Draft',
+                    'published' => 'Published',
+                    'ongoing' => 'Ongoing',
+                    'ended' => 'Ended',
+                    'canceled' => 'Canceled',
+                ]),
+        ])
+        ->actions([
+            Tables\Actions\ViewAction::make(),
+            Tables\Actions\EditAction::make(),
+            Tables\Actions\DeleteAction::make(),
+          //  Tables\Actions\Action::make('viewParticipants')
+               // ->label('Participants')
+              //  ->icon('heroicon-m-user-group')
+              //  ->url(fn (Event $record) => route('filament.admin.resources.events.view', ['record' => $record->getKey()])),
+        ])
+        ->bulkActions([
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+                Tables\Actions\RestoreBulkAction::make(),
+            ]),
+        ])
+        ->emptyStateActions([
+            Tables\Actions\CreateAction::make(),
+        ]);
+}
 
     public static function getNavigationGroup(): ?string
     {

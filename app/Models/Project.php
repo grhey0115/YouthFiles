@@ -72,6 +72,25 @@ class Project extends Model
         return $this->total_budget - $this->disbursements()->where('status', 'approved')->sum('disbursed_amount');
     }*/
 
+    public function getProjectDurationAttribute()
+    {
+        return Carbon::parse($this->start_date)->diffInDays(Carbon::parse($this->end_date)) . ' days';
+    }
+
+    public function getStatusAttribute()
+    {
+        $now = Carbon::now();
+        $start = Carbon::parse($this->start_date);
+        $end = Carbon::parse($this->end_date);
+
+        return match(true) {
+            $now->lt($start) => 'Upcoming',
+            $now->between($start, $end) => 'Ongoing',
+            $now->gt($end) => 'Completed',
+            default => 'Unknown'
+        };
+    }
+
     
     
    

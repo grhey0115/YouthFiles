@@ -14,7 +14,7 @@ class PointsRedemptionResource extends Resource
 {
     protected static ?string $model = PointsRedemption::class;
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
-    protected static ?string $navigationGroup = 'Rewards';
+    protected static ?string $navigationGroup = 'Rewards Management';
 
     public static function form(Form $form): Form
     {

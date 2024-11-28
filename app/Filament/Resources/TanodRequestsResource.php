@@ -19,8 +19,8 @@ class TanodRequestsResource extends Resource
     protected static ?string $model = TanodRequests::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?string $navigationGroup = 'Community Services';
 
-    //protected static ?string $navigationGroup = 'Community Services';
 
     public static function form(Form $form): Form
     {

@@ -15,6 +15,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Storage;
+use Filament\Tables\Columns\ImageColumn;
+use Carbon\Carbon;
 
 class ProjectResource extends Resource
 {
@@ -68,56 +71,114 @@ class ProjectResource extends Resource
         ]);
 }
 
-    public static function table(Table $table): Table
-    {
-        return $table
+public static function table(Table $table): Table
+{
+    return $table
         ->columns([
             Tables\Columns\TextColumn::make('project_id')
+                ->label('Project Code')
+                ->searchable()
                 ->sortable(),
 
             Tables\Columns\TextColumn::make('name')
-                ->sortable(),
+                ->label('Project Name')
+                ->searchable()
+                ->sortable()
+                ->wrap(),
 
-            Tables\Columns\TextColumn::make('description')
-                ->limit(50),
-            
+          //  Tables\Columns\ImageColumn::make('header_image')
+             //   ->label('Image')
+            //    ->circular(),
+                
+
+            Tables\Columns\TextColumn::make('budget.name')
+                ->label('Budget Source')
+                ->searchable(),
+
             Tables\Columns\TextColumn::make('total_budget')
-            ->money('PHP', true)
-            ->sortable(),
-
-           Tables\Columns\TextColumn::make('remaining_budget')
-            ->money('PHP', true)
-            ->limit(50)
-            ->color(function ($state, $record) {
-                $totalBudget = $record->total_budget; // Assuming 'total_budget' is a field in the same table
-                $percentage = ($totalBudget > 0) ? ($state / $totalBudget) * 100 : 0;
-
-                if ($percentage > 50) {
-                    return 'success'; // Green
-                } elseif ($percentage > 20) {
-                    return 'warning'; // Orange
-                } else {
-                    return 'danger';  // Red
-                }
-            }),
-
-            Tables\Columns\TextColumn::make('start_date')
-                ->date()
+                ->label('Total Budget')
+                ->money('PHP')
+                ->color('primary')
                 ->sortable(),
 
-            Tables\Columns\TextColumn::make('end_date')
-                ->date()
-                ->sortable(),
+            Tables\Columns\TextColumn::make('remaining_budget')
+                ->label('Remaining Budget')
+                ->money('PHP')
+                ->color(function ($state, $record) {
+                    $percentage = $record->total_budget > 0 
+                        ? ($state / $record->total_budget) * 100 
+                        : 0;
 
-           
+                    return match(true) {
+                        $percentage > 50 => 'success',
+                        $percentage > 20 => 'warning',
+                        default => 'danger'
+                    };
+                }),
+
+            Tables\Columns\TextColumn::make('project_duration')
+                ->label('Duration')
+                ->getStateUsing(function ($record) {
+                    $start = Carbon::parse($record->start_date);
+                    $end = Carbon::parse($record->end_date);
+                    return $start->diffInDays($end) . ' days';
+                })
+                ->badge()
+                ->color('info'),
+
+            Tables\Columns\TextColumn::make('date_range')
+                ->label('Project Period')
+                ->getStateUsing(function ($record) {
+                    return Carbon::parse($record->start_date)->format('M d, Y') . 
+                           ' - ' . 
+                           Carbon::parse($record->end_date)->format('M d, Y');
+                })
+                ->wrap(),
+
+            Tables\Columns\BadgeColumn::make('status')
+                ->label('Status')
+                ->getStateUsing(function ($record) {
+                    $now = Carbon::now();
+                    $start = Carbon::parse($record->start_date);
+                    $end = Carbon::parse($record->end_date);
+
+                    return match(true) {
+                        $now->lt($start) => 'Upcoming',
+                        $now->between($start, $end) => 'Ongoing',
+                        $now->gt($end) => 'Completed',
+                        default => 'Unknown'
+                    };
+                })
+                ->colors([
+                    'success' => 'Completed',
+                    'warning' => 'Ongoing',
+                    'info' => 'Upcoming',
+                    'danger' => 'Unknown'
+                ]),
 
             Tables\Columns\TextColumn::make('procurements_count')
                 ->counts('procurements')
-                ->label('Total Procurements'),
+                ->label('Procurements')
+                ->badge()
+                ->color('secondary'),
 
             Tables\Columns\TextColumn::make('disbursements_count')
                 ->counts('disbursements')
-                ->label('Total Disbursements'),
+                ->label('Disbursements')
+                ->badge()
+                ->color('secondary'),
+        ])
+        ->defaultSort('created_at', 'desc')
+        ->filters([
+            Tables\Filters\SelectFilter::make('status')
+                ->options([
+                    'Upcoming' => 'Upcoming',
+                    'Ongoing' => 'Ongoing',
+                    'Completed' => 'Completed'
+                ]),
+            Tables\Filters\SelectFilter::make('budget_id')
+                ->relationship('budget', 'name')
+                ->label('Budget Source')
         ])
         ->defaultSort('created_at', 'desc')
         ->actions([

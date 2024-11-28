@@ -240,18 +240,104 @@ class AyudaResource extends Resource
     ]);
 }
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('title')->label('Title'),
-                Tables\Columns\TextColumn::make('sector')->label('Sector'),
-                Tables\Columns\TextColumn::make('assistance_date')
-                    ->label('Date of Assistance')
-                    ->dateTime(),
-                
-            ])
-            ->defaultSort('created_at', 'desc')
+public static function table(Table $table): Table
+{
+    return $table
+        ->columns([
+            Tables\Columns\ImageColumn::make('header')
+                ->label('Header')
+                ->circular()
+                ->toggleable(),
+
+            Tables\Columns\TextColumn::make('title')
+                ->label('Program Title')
+                ->searchable()
+                ->sortable()
+                ->wrap(),
+
+            Tables\Columns\BadgeColumn::make('sector')
+                ->label('Sector')
+                ->color(fn (string $state): string => match ($state) {
+                    'health' => 'danger',
+                    'education' => 'success',
+                    default => 'primary'
+                })
+                ->icon(fn (string $state): string => match ($state) {
+                    'health' => 'heroicon-m-heart',
+                    'education' => 'heroicon-m-academic-cap',
+                    default => 'heroicon-m-globe-alt'
+                }),
+
+            Tables\Columns\BadgeColumn::make('assistance_type')
+                ->label('Assistance Type')
+                ->color(fn (string $state): string => match ($state) {
+                    'cash' => 'success',
+                    'education' => 'primary',
+                    'livelihood' => 'warning',
+                    'health' => 'danger',
+                    'AICS' => 'info',
+                    default => 'secondary'
+                }),
+
+            Tables\Columns\BadgeColumn::make('status')
+                ->label('Status')
+                ->color(fn (string $state): string => match ($state) {
+                    'open' => 'success',
+                    'closed' => 'danger',
+                    'in_progress' => 'warning',
+                    'pending_approval' => 'info',
+                    'suspended' => 'gray',
+                    default => 'secondary'
+                }),
+
+            Tables\Columns\TextColumn::make('max_beneficiaries')
+                ->label('Max Beneficiaries')
+                ->numeric()
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('assistance_date')
+                ->label('Assistance Date')
+                ->date('M d, Y')
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('date_start')
+                ->label('Registration Start')
+                ->date('M d, Y')
+                ->color('primary')
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            Tables\Columns\TextColumn::make('date_end')
+                ->label('Registration End')
+                ->date('M d, Y')
+                ->color('danger')
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
+        ->defaultSort('assistance_date', 'desc')
+        ->filters([
+            Tables\Filters\SelectFilter::make('sector')
+                ->options([
+                    'health' => 'Health',
+                    'education' => 'Education',
+                ]),
+            
+            Tables\Filters\SelectFilter::make('assistance_type')
+                ->options([
+                    'cash' => 'Cash Assistance',
+                    'education' => 'Educational Assistance',
+                    'livelihood' => 'Livelihood Support',
+                    'health' => 'Health Assistance',
+                    'AICS' => 'AICS',
+                ]),
+            
+            Tables\Filters\SelectFilter::make('status')
+                ->options([
+                    'open' => 'Open',
+                    'closed' => 'Closed',
+                    'in_progress' => 'In Progress',
+                    'pending_approval' => 'Pending Approval',
+                    'suspended' => 'Suspended',
+                ]),
+        ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),

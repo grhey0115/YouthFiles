@@ -4,6 +4,7 @@ namespace App\Filament\Resources\UsersResource\Pages;
 
 use App\Filament\Resources\UsersResource;
 use Filament\Actions;
+use App\Filament\Widgets\StatsOverview;
 use Filament\Resources\Pages\ListRecords;
 
 class ListUsers extends ListRecords
@@ -20,7 +21,7 @@ class ListUsers extends ListRecords
     protected function getHeaderWidgets(): array
     {
         return [
-            UsersResource\Widgets\useroverview::class,
+            StatsOverview::class,
         ];
     }
 }

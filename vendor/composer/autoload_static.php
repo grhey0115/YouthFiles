@@ -325,6 +325,8 @@ class ComposerStaticInitc13bec01a0c72e52ca6fa957f687107a
         array (
             'App\\' => 4,
             'AnourValar\\EloquentSerialize\\' => 29,
+            'Afsakar\\FilamentOtpLogin\\Database\\Factories\\' => 44,
+            'Afsakar\\FilamentOtpLogin\\' => 25,
         ),
     );
 
@@ -1106,6 +1108,14 @@ class ComposerStaticInitc13bec01a0c72e52ca6fa957f687107a
         array (
             0 => __DIR__ . '/..' . '/anourvalar/eloquent-serialize/src',
         ),
+        'Afsakar\\FilamentOtpLogin\\Database\\Factories\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/afsakar/filament-otp-login/database/factories',
+        ),
+        'Afsakar\\FilamentOtpLogin\\' => 
+        array (
+            0 => __DIR__ . '/..' . '/afsakar/filament-otp-login/src',
+        ),
     );
 
     public static $prefixesPsr0 = array (
@@ -1119,6 +1129,15 @@ class ComposerStaticInitc13bec01a0c72e52ca6fa957f687107a
     );
 
     public static $classMap = array (
+        'Afsakar\\FilamentOtpLogin\\Commands\\PruneOtpCodes' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Commands/PruneOtpCodes.php',
+        'Afsakar\\FilamentOtpLogin\\FilamentOtpLoginPlugin' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/FilamentOtpLoginPlugin.php',
+        'Afsakar\\FilamentOtpLogin\\FilamentOtpLoginServiceProvider' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/FilamentOtpLoginServiceProvider.php',
+        'Afsakar\\FilamentOtpLogin\\Filament\\Forms\\OtpInput' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Filament/Forms/OtpInput.php',
+        'Afsakar\\FilamentOtpLogin\\Filament\\Pages\\Login' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Filament/Pages/Login.php',
+        'Afsakar\\FilamentOtpLogin\\Models\\Contracts\\CanLoginDirectly' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Models/Contracts/CanLoginDirectly.php',
+        'Afsakar\\FilamentOtpLogin\\Models\\OtpCode' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Models/OtpCode.php',
+        'Afsakar\\FilamentOtpLogin\\Notifications\\SendOtpCode' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Notifications/SendOtpCode.php',
+        'Afsakar\\FilamentOtpLogin\\Testing\\TestsFilamentOtpLogin' => __DIR__ . '/..' . '/afsakar/filament-otp-login/src/Testing/TestsFilamentOtpLogin.php',
         'AnourValar\\EloquentSerialize\\Facades\\EloquentSerializeFacade' => __DIR__ . '/..' . '/anourvalar/eloquent-serialize/src/Facades/EloquentSerializeFacade.php',
         'AnourValar\\EloquentSerialize\\Grammars\\EloquentBuilderGrammar' => __DIR__ . '/..' . '/anourvalar/eloquent-serialize/src/Grammars/EloquentBuilderGrammar.php',
         'AnourValar\\EloquentSerialize\\Grammars\\ModelGrammar' => __DIR__ . '/..' . '/anourvalar/eloquent-serialize/src/Grammars/ModelGrammar.php',
@@ -1268,6 +1287,11 @@ class ComposerStaticInitc13bec01a0c72e52ca6fa957f687107a
         'App\\Filament\\Resources\\YouthResource\\Pages\\EditYouth' => __DIR__ . '/../..' . '/app/Filament/Resources/YouthResource/Pages/EditYouth.php',
         'App\\Filament\\Resources\\YouthResource\\Pages\\ListYouths' => __DIR__ . '/../..' . '/app/Filament/Resources/YouthResource/Pages/ListYouths.php',
         'App\\Filament\\Resources\\YouthResource\\Pages\\ViewYouth' => __DIR__ . '/../..' . '/app/Filament/Resources/YouthResource/Pages/ViewYouth.php',
+        'App\\Filament\\Widgets\\BudgetPieChartWidget' => __DIR__ . '/../..' . '/app/Filament/Widgets/BudgetPieChartWidget.php',
+        'App\\Filament\\Widgets\\BudgetStatsOverview' => __DIR__ . '/../..' . '/app/Filament/Widgets/BudgetStatsOverview.php',
+        'App\\Filament\\Widgets\\CalendarWidget' => __DIR__ . '/../..' . '/app/Filament/Widgets/CalendarWidget.php',
+        'App\\Filament\\Widgets\\EventMetricsOverview' => __DIR__ . '/../..' . '/app/Filament/Widgets/EventMetricsOverview.php',
+        'App\\Filament\\Widgets\\KeyMetricsOverview' => __DIR__ . '/../..' . '/app/Filament/Widgets/KeyMetricsOverview.php',
         'App\\Filament\\Widgets\\StatsOverview' => __DIR__ . '/../..' . '/app/Filament/Widgets/StatsOverview.php',
         'App\\Filament\\Widgets\\YouthChart' => __DIR__ . '/../..' . '/app/Filament/Widgets/YouthChart.php',
         'App\\Http\\Controllers\\AnnouncementController' => __DIR__ . '/../..' . '/app/Http/Controllers/AnnouncementController.php',

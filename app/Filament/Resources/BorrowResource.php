@@ -21,6 +21,7 @@ class BorrowResource extends Resource
 
     protected static ?string $navigationLabel = 'Borrow Requests';
     protected static ?string $navigationGroup = 'Requests';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {

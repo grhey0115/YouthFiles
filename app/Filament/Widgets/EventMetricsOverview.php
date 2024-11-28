@@ -10,6 +10,7 @@ use Carbon\Carbon;
 
 class EventMetricsOverview extends BaseWidget
 {
+    protected ?string $heading = 'Events Metrics';
     protected static ?int $sort = 2;
     protected function getStats(): array
     {

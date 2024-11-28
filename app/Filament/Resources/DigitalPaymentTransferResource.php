@@ -123,7 +123,7 @@ class DigitalPaymentTransferResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('user.full_name')
                     ->label('Beneficiary')
                     ->searchable()
                     ->sortable(),

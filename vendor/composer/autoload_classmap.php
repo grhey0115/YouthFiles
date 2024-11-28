@@ -6,6 +6,15 @@ $vendorDir = dirname(__DIR__);
 $baseDir = dirname($vendorDir);
 
 return array(
+    'Afsakar\\FilamentOtpLogin\\Commands\\PruneOtpCodes' => $vendorDir . '/afsakar/filament-otp-login/src/Commands/PruneOtpCodes.php',
+    'Afsakar\\FilamentOtpLogin\\FilamentOtpLoginPlugin' => $vendorDir . '/afsakar/filament-otp-login/src/FilamentOtpLoginPlugin.php',
+    'Afsakar\\FilamentOtpLogin\\FilamentOtpLoginServiceProvider' => $vendorDir . '/afsakar/filament-otp-login/src/FilamentOtpLoginServiceProvider.php',
+    'Afsakar\\FilamentOtpLogin\\Filament\\Forms\\OtpInput' => $vendorDir . '/afsakar/filament-otp-login/src/Filament/Forms/OtpInput.php',
+    'Afsakar\\FilamentOtpLogin\\Filament\\Pages\\Login' => $vendorDir . '/afsakar/filament-otp-login/src/Filament/Pages/Login.php',
+    'Afsakar\\FilamentOtpLogin\\Models\\Contracts\\CanLoginDirectly' => $vendorDir . '/afsakar/filament-otp-login/src/Models/Contracts/CanLoginDirectly.php',
+    'Afsakar\\FilamentOtpLogin\\Models\\OtpCode' => $vendorDir . '/afsakar/filament-otp-login/src/Models/OtpCode.php',
+    'Afsakar\\FilamentOtpLogin\\Notifications\\SendOtpCode' => $vendorDir . '/afsakar/filament-otp-login/src/Notifications/SendOtpCode.php',
+    'Afsakar\\FilamentOtpLogin\\Testing\\TestsFilamentOtpLogin' => $vendorDir . '/afsakar/filament-otp-login/src/Testing/TestsFilamentOtpLogin.php',
     'AnourValar\\EloquentSerialize\\Facades\\EloquentSerializeFacade' => $vendorDir . '/anourvalar/eloquent-serialize/src/Facades/EloquentSerializeFacade.php',
     'AnourValar\\EloquentSerialize\\Grammars\\EloquentBuilderGrammar' => $vendorDir . '/anourvalar/eloquent-serialize/src/Grammars/EloquentBuilderGrammar.php',
     'AnourValar\\EloquentSerialize\\Grammars\\ModelGrammar' => $vendorDir . '/anourvalar/eloquent-serialize/src/Grammars/ModelGrammar.php',
@@ -155,6 +164,11 @@ return array(
     'App\\Filament\\Resources\\YouthResource\\Pages\\EditYouth' => $baseDir . '/app/Filament/Resources/YouthResource/Pages/EditYouth.php',
     'App\\Filament\\Resources\\YouthResource\\Pages\\ListYouths' => $baseDir . '/app/Filament/Resources/YouthResource/Pages/ListYouths.php',
     'App\\Filament\\Resources\\YouthResource\\Pages\\ViewYouth' => $baseDir . '/app/Filament/Resources/YouthResource/Pages/ViewYouth.php',
+    'App\\Filament\\Widgets\\BudgetPieChartWidget' => $baseDir . '/app/Filament/Widgets/BudgetPieChartWidget.php',
+    'App\\Filament\\Widgets\\BudgetStatsOverview' => $baseDir . '/app/Filament/Widgets/BudgetStatsOverview.php',
+    'App\\Filament\\Widgets\\CalendarWidget' => $baseDir . '/app/Filament/Widgets/CalendarWidget.php',
+    'App\\Filament\\Widgets\\EventMetricsOverview' => $baseDir . '/app/Filament/Widgets/EventMetricsOverview.php',
+    'App\\Filament\\Widgets\\KeyMetricsOverview' => $baseDir . '/app/Filament/Widgets/KeyMetricsOverview.php',
     'App\\Filament\\Widgets\\StatsOverview' => $baseDir . '/app/Filament/Widgets/StatsOverview.php',
     'App\\Filament\\Widgets\\YouthChart' => $baseDir . '/app/Filament/Widgets/YouthChart.php',
     'App\\Http\\Controllers\\AnnouncementController' => $baseDir . '/app/Http/Controllers/AnnouncementController.php',

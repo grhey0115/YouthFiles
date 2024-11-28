@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\DB;
 
 class KeyMetricsOverview extends BaseWidget
 {
+    protected ?string $heading = 'Assistance Metrics';
     protected static ?int $sort = 3;
     protected function getStats(): array
     {

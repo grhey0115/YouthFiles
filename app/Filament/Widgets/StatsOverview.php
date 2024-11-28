@@ -11,6 +11,7 @@ use Carbon\Carbon;
 
 class StatsOverview extends BaseWidget
 {
+    protected ?string $heading = 'Youth Overview';
     protected static ?int $sort = 1;
     protected function getStats(): array
     {

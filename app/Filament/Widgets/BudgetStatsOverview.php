@@ -10,6 +10,7 @@ use Carbon\Carbon;
   
 class BudgetStatsOverview extends BaseWidget  
 {  
+   protected ?string $heading = 'Budget Stats';
    protected static ?int $sort = 3;  
   
    protected function getStats(): array  

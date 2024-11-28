@@ -18,6 +18,14 @@ class Budget extends Model
         'end_date', 
         'created_by',
         'budget_id',
+        'contingency_percentage',
+        'contingency_amount',
+        'duration',
+        'total_allocated',
+        'funding_source',
+        'status',
+
+
     ];
 
     public function procurements()

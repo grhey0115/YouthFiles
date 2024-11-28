@@ -80,7 +80,10 @@ class AdminPanelProvider extends PanelProvider
                 'Events',
                 'Ayuda',
                 'Project Expenditure',
-                'Requests',
+                'Rewards Management',
+                'Community Services',
+                'Financial Services',
+                
             ])
             ->userMenuItems([
                 MenuItem::make()

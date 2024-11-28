@@ -8,11 +8,12 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Widgets\StatsOverview;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Filament\Resources\UsersResource\Widgets;
 use Hugomyb\FilamentMediaAction\Forms\Components\Actions\MediaAction;
 use Filament\Tables\Actions\Action;
+use Illuminate\Support\Facades\Storage;
 
 
 class UsersResource extends Resource
@@ -47,7 +48,18 @@ class UsersResource extends Resource
                     ->unique(ignoreRecord: true),
                     Forms\Components\TextInput::make('password')
                     ->label('Password')
-                    ->required(),
+                    ->password()
+                    ->required(fn ($context) => $context === 'create') // Required only on creation
+                    ->minLength(8)
+                    ->same('password_confirmation') // Optional: Add password confirmation
+                    ->dehydrateStateUsing(fn ($state) => bcrypt($state)),
+                    
+                Forms\Components\TextInput::make('password_confirmation')
+                    ->label('Confirm Password')
+                    ->password()
+                    ->required(fn ($context) => $context === 'create')
+                    ->hidden(fn ($context) => $context !== 'create'),
+
                 Forms\Components\CheckboxList::make('roles')
                     ->label('Roles')
                     ->relationship('roles', 'name')
@@ -56,25 +68,63 @@ class UsersResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->columns([
-                Tables\Columns\TextColumn::make('first_name')
-                    ->label('First Name')
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('last_name')
-                    ->label('Last Name')
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                    ->label('Email')
-                    ->sortable()
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created At')
-                    ->date(),
-            ])
+{
+    return $table
+        ->columns([
+            Tables\Columns\ImageColumn::make('avatar')
+                ->label('Avatar')
+                ->circular()
+                ->defaultImageUrl(function ($record) {
+                    // Fallback to default avatar if no image exists
+                    return $record->avatar 
+                        ? Storage::url($record->avatar) 
+                        : asset('images/default-avatar.png');
+                }),
+
+            Tables\Columns\TextColumn::make('full_name')
+                ->label('Full Name')
+                ->getStateUsing(fn ($record) => 
+                    trim($record->first_name . ' ' . 
+                         ($record->middle_name ? $record->middle_name . ' ' : '') . 
+                         $record->last_name)
+                )
+                ->searchable()
+                ->sortable(),
+
+            Tables\Columns\TextColumn::make('email')
+                ->label('Email')
+                ->icon('heroicon-m-envelope')
+                ->copyable()
+                ->sortable()
+                ->searchable(),
+
+            Tables\Columns\TextColumn::make('phone_number')
+                ->label('Phone')
+                ->icon('heroicon-m-phone')
+                ->copyable()
+                ->toggleable(isToggledHiddenByDefault: true),
+
+            Tables\Columns\BadgeColumn::make('roles')
+                ->label('Roles')
+                ->getStateUsing(fn ($record) => 
+                    $record->roles->pluck('name')->implode(', ')
+                )
+                ->color('primary')
+                ->separator(','),
+
+            Tables\Columns\TextColumn::make('email_verified_at')
+                ->label('Verified')
+                ->date()
+                ->badge()
+                ->color(fn ($state) => $state ? 'success' : 'danger')
+                ->icon(fn ($state) => $state ? 'heroicon-m-check-badge' : 'heroicon-m-x-circle'),
+
+            Tables\Columns\TextColumn::make('created_at')
+                ->label('Registered')
+                ->since()
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\Filter::make('verified')
@@ -113,12 +163,7 @@ class UsersResource extends Resource
         ];
     }
 
-    public static function getWidgets(): array
-    {
-        return [
-            UsersResource\Widgets\useroverview::class,
-        ];
-    }
+   
 
     public static function getPages(): array
     {
