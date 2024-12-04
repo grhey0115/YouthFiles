@@ -31,7 +31,8 @@ class Ayuda extends Model
         'requirements_needed',    // Whether requirements are needed (yes/no)
         'requirements_file',
         'needs_donations',
-        'needs_volunteers',      // Path to the file for required documents
+        'needs_volunteers', 
+        'location',     
     ];
     protected $casts = [
         'filter' => 'array',

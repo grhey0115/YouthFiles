@@ -35,6 +35,7 @@ class BudgetResource extends Resource
     protected static ?string $navigationLabel = 'Local Budget';
     protected static ?string $navigationGroup = 'Project Expenditure';
     protected static ?int $navigationSort = 1;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Form $form): Form
     {

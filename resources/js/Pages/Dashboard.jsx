@@ -2,31 +2,49 @@ import { useState } from 'react';
 import { usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
-import { Tabs, Pagination, Badge } from 'antd';
+import { 
+  EnvironmentOutlined, 
+  CalendarOutlined 
+} from '@ant-design/icons';
+import { Tabs, Pagination, Badge, Card, Typography } from 'antd';
 import styled from 'styled-components';
 import ErrorBoundary from '@/Components/ErrorBoundary';
 
-const StyledCard = styled.div`
+const { Title, Text } = Typography;
+
+const StyledCard = styled(Card)`
   max-width: 300px;
+  height: 360px;
   border-radius: 0.5rem;
   background-color: #fff;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  border: 1px solid transparent;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
+  overflow: hidden;
+  text-align: center;
+
+  .ant-card-body {
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
 
   .image {
     width: 100%;
     height: 150px;
     object-fit: cover;
-    border-top-left-radius: 0.5rem;
-    border-top-right-radius: 0.5rem;
   }
 
   .content {
-    padding: 1.1rem;
+    padding: 0.8rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
 
   .title {
@@ -34,7 +52,7 @@ const StyledCard = styled.div`
     font-size: 1.125rem;
     line-height: 1.75rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
+    margin: 0.5rem 0;
   }
 
   .desc {
@@ -52,31 +70,33 @@ const StyledCard = styled.div`
     line-height: 1.25rem;
     font-weight: 500;
     align-items: center;
+    justify-content: center;
     gap: 0.25rem;
-    background-color: #2563EB;
-    padding: 4px 8px;
+    background-color: #17B169;
+    padding: 8px 16px;
     border-radius: 4px;
     text-decoration: none;
     cursor: pointer;
+    transition: background-color 0.3s ease;
   }
 
   .action:hover {
-    background-color: #1d4ed8;
+    background-color: #03C03C;
   }
 `;
 
 const StyledPaginationContainer = styled.div`
   position: fixed;
-  bottom: 20px; /* Distance from the bottom of the viewport */
-  right: 20px; /* Distance from the right of the viewport */
-  z-index: 1000; /* Ensure it appears above other elements */
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
 
-  /* Optional: Adjust for smaller screens */
   @media (max-width: 768px) {
     right: 10px;
     bottom: 10px;
   }
 `;
+
 const Dashboard = () => {
   const { auth, events } = usePage().props;
   const [activeTab, setActiveTab] = useState("upcoming");
@@ -84,11 +104,6 @@ const Dashboard = () => {
   const [pastPage, setPastPage] = useState(1);
   const itemsPerPage = 8;
 
-  console.log('Full usePage props:', usePage().props);
-  console.log('Auth object:', auth);
-  console.log('User object:', auth?.user);
-
-  // Ensure you have a fallback
   const handleTabChange = (key) => {
     setActiveTab(key);
   };
@@ -119,32 +134,53 @@ const Dashboard = () => {
     return filteredEvents.slice(startIndex, endIndex);
   };
 
+  const renderEventCard = (event) => (
+    <Badge.Ribbon
+      key={event.id}
+      text={event.available_slots > 0 ? `${event.available_slots} Slots Left` : "Full"}
+      color={event.available_slots > 0 ? "green" : "red"}
+      placement="start"
+    >
+      <StyledCard
+        cover={
+          <img 
+            className="image" 
+            src={event.header_image ? `/storage/${event.header_image}` : '/default-event-image.jpg'} 
+            alt={event.name} 
+            onError={(e) => {
+              e.target.src = '/default-event-image.jpg';
+            }}
+          />
+        }
+      >
+        <div className="content">
+          <Title  
+            level={4}  
+            className="title truncate text-ellipsis overflow-hidden"  
+            style={{ fontSize: 'clamp(1rem, 1.5vw, 1.25rem)' }}  
+          > 
+            {event.name}
+          </Title>
+         
+          <Text className="desc title truncate text-ellipsis overflow-hidden">
+            <CalendarOutlined /> {new Date(event.event_date).toLocaleDateString()} at {new Date(event.event_date).toLocaleTimeString()}
+            <br />
+            <EnvironmentOutlined /> {event.location || "Online"}
+            <br />
+            {event.description}
+          </Text>
+          <Link href={route("events.show", event.id)} className="action">
+            Check Details
+          </Link>
+        </div>
+      </StyledCard>
+    </Badge.Ribbon>
+  );
+
   const renderEvents = (filteredEvents) => {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredEvents.map((event) => (
-          <Badge.Ribbon
-            key={event.id}
-            text={event.available_slots > 0 ? `${event.available_slots} Slots Left` : "Full"}
-            color={event.available_slots > 0 ? "green" : "red"}
-            placement="start"
-          >
-            <StyledCard>
-              <img className="image" src={`/storage/${event.header_image}`} alt={event.name} />
-              <div className="content">
-                <h3 className="title">{event.name}</h3>
-                <p className="desc">
-                  <strong>When:</strong> {new Date(event.event_date).toLocaleDateString()}
-                  <br />
-                  <strong>Where:</strong> {event.location || "Online"}
-                </p>
-                <Link href={route("events.show", event.id)} className="action">
-                  View Event
-                </Link>
-              </div>
-            </StyledCard>
-          </Badge.Ribbon>
-        ))}
+        {filteredEvents.map(renderEventCard)}
       </div>
     );
   };
@@ -154,7 +190,7 @@ const Dashboard = () => {
 
   return (
     <ErrorBoundary>
-     <AuthenticatedLayout user={auth}>
+      <AuthenticatedLayout user={auth}>
         <Head title="Dashboard" />
 
         <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
@@ -166,12 +202,12 @@ const Dashboard = () => {
             items={[
               {
                 key: "upcoming",
-                label: "Upcoming Events",
+                label: `Upcoming Events (${upcomingEvents.length})`,
                 children: renderEvents(paginateEvents(upcomingEvents, upcomingPage)),
               },
               {
                 key: "past",
-                label: "Past Events",
+                label: `Past Events (${pastEvents.length})`,
                 children: renderEvents(paginateEvents(pastEvents, pastPage)),
               },
             ]}

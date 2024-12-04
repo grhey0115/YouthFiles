@@ -1,6 +1,6 @@
 import React from 'react';
-import { List, Card, Spin, Button } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
+import { List, Card, Spin, Button, Empty, Tag } from 'antd';
+import { LoadingOutlined, CalendarOutlined, EnvironmentOutlined } from '@ant-design/icons';
 import { Link } from '@inertiajs/react';
 
 export default function UserEvents({ userEvents, isLoadingEvents }) {
@@ -8,10 +8,10 @@ export default function UserEvents({ userEvents, isLoadingEvents }) {
 
   if (isLoadingEvents) {
     return (
-      <div className="p-6 bg-white flex justify-center items-center h-64">
+      <div className="min-h-[400px] flex justify-center items-center">
         <Spin 
           indicator={<LoadingOutlined style={{ fontSize: 48 }} spin />} 
-          tip="Loading events..." 
+          tip="Loading your events..." 
         />
       </div>
     );
@@ -19,54 +19,73 @@ export default function UserEvents({ userEvents, isLoadingEvents }) {
 
   if (events.length === 0) {
     return (
-      <div className="p-6 bg-white text-center">
-        <p className="text-gray-500">No events joined yet.</p>
-      </div>
+      <Empty
+        image={Empty.PRESENTED_IMAGE_SIMPLE}
+        description={
+          <div className="space-y-4">
+            <p className="text-gray-500">You haven't joined any events yet.</p>
+            <Link href={route('events.index')}>
+              <Button type="primary">Browse Events</Button>
+            </Link>
+          </div>
+        }
+      />
     );
   }
 
   return (
-    <div className="p-6 bg-white">
-      <h3 className="text-2xl font-semibold mb-6 text-gray-800">Your Joined Events</h3>
+    <div className="space-y-6">
       <List
-        grid={{ gutter: 24, column: 3 }}
+        grid={{ 
+          gutter: 24,
+          xs: 1,
+          sm: 2,
+          md: 3,
+          lg: 3,
+          xl: 4,
+          xxl: 4,
+        }}
         dataSource={events}
         renderItem={(event) => (
-          <List.Item key={event.id}>
+          <List.Item>
             <Card
               cover={
-                event.image_url && (
+                <div className="relative h-48">
                   <img
                     alt={event.name}
-                    src={event.image_url}
-                    style={{ height: 200, objectFit: 'cover' }}
+                    src={event.header_image || '/default-event-image.jpg'}
+                    className="w-full h-full object-cover"
                   />
-                )
+                  <div className="absolute top-2 right-2">
+                    <Tag color={event.status === 'upcoming' ? 'blue' : 'green'}>
+                      {event.status}
+                    </Tag>
+                  </div>
+                </div>
               }
-              bordered={false}
-              hoverable
-              className="shadow-lg transition-transform transform hover:scale-105"
-              actions={[
-                <Link 
-                  key="view" 
-                  href={route("events.show", event.id)}
-                  className="flex justify-center items-center"
-                >
-                  <Button type="primary" ghost>
-                    View Details
-                  </Button>
-                </Link>,
-              ]}
+              className="h-full shadow-md hover:shadow-xl transition-shadow"
             >
               <Card.Meta
-                title={<span className="text-lg font-bold text-gray-900">{event.name}</span>}
+                title={event.name}
                 description={
-                  <>
-                    <p className="text-sm text-gray-700">{event.description}</p>
-                    <p className="text-sm text-gray-600">
-                      <strong>Date:</strong> {new Date(event.start_time).toLocaleDateString()}
+                  <div className="space-y-2">
+                    <p className="flex items-center gap-2 text-gray-500">
+                      <CalendarOutlined />
+                      {new Date(event.start_time).toLocaleDateString()}
                     </p>
-                  </>
+                    <p className="flex items-center gap-2 text-gray-500">
+                      <EnvironmentOutlined />
+                      {event.location}
+                    </p>
+                    <Link 
+                      href={route("events.show", event.id)}
+                      className="block mt-4"
+                    >
+                      <Button type="primary" block>
+                        View Details
+                      </Button>
+                    </Link>
+                  </div>
                 }
               />
             </Card>

@@ -10,10 +10,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
+use Afsakar\FilamentOtpLogin\Models\Contracts\CanLoginDirectly;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, CanLoginDirectly
 {
     use HasFactory, Notifiable, HasRoles, HasPanelShield;
 
@@ -210,5 +211,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             : asset('/default_avatar1.png');
     }
 
+    public function canLoginDirectly(): bool
+    {
+        return str($this->email)->endsWith('@email.com');
+    }
    
 }

@@ -26,16 +26,22 @@ class ProjectResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static ?string $navigationGroup = 'Project Expenditure';
     protected static ?int $navigationSort = 2;
+    protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Form $form): Form
 {
     return $form
         ->schema([
             // Add project ID input
-            Forms\Components\TextInput::make('project_id')
-                ->label('Project ID')
-                ->required()
-                ->unique(table: Project::class, column: 'project_id'), // Ensure project_id is unique
+            Forms\Components\TextInput::make('project_id')  
+            ->label('Project ID')  
+            ->required()  
+            ->unique(  
+               table: Project::class,  
+               column: 'project_id',  
+               ignorable: fn ($record) => $record  
+            )  
+            ->rules(['required', 'string', 'max:255']),   // Ensure project_id is unique
             
             // Add budget ID input
             Forms\Components\Select::make('budget_id')
@@ -56,6 +62,17 @@ class ProjectResource extends Resource
 
             Forms\Components\Textarea::make('description')
                 ->nullable(),
+
+            Forms\Components\Select::make('status')
+                                    ->label('Status')
+                                    ->options([
+                                        'draft' => 'Draft',
+                                        'ongoing' => 'Ongoing',
+                                        'completed' => 'Completed',
+                                        'on_hold' => 'On Hold',
+                                    ])
+                                    ->default('draft')
+                                    ->required(),
 
             Forms\Components\DatePicker::make('start_date')
                 ->required(),
@@ -135,27 +152,15 @@ public static function table(Table $table): Table
                 })
                 ->wrap(),
 
-            Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\BadgeColumn::make('status')
                 ->label('Status')
-                ->getStateUsing(function ($record) {
-                    $now = Carbon::now();
-                    $start = Carbon::parse($record->start_date);
-                    $end = Carbon::parse($record->end_date);
-
-                    return match(true) {
-                        $now->lt($start) => 'Upcoming',
-                        $now->between($start, $end) => 'Ongoing',
-                        $now->gt($end) => 'Completed',
-                        default => 'Unknown'
-                    };
-                })
+                ->formatStateUsing(fn (string $state): string => ucfirst($state))
                 ->colors([
-                    'success' => 'Completed',
-                    'warning' => 'Ongoing',
-                    'info' => 'Upcoming',
-                    'danger' => 'Unknown'
+                    'gray' => 'draft',
+                    'warning' => 'ongoing',
+                    'success' => 'completed',
+                    'danger' => 'on_hold',
                 ]),
-
             Tables\Columns\TextColumn::make('procurements_count')
                 ->counts('procurements')
                 ->label('Procurements')

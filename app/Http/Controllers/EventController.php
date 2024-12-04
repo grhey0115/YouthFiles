@@ -40,23 +40,40 @@ class EventController extends Controller
     {
         $event = Event::findOrFail($id);
         $authUser = Auth::user();
+        $relatedEvents = Event::where('id', '!=', $event->id)
+            ->where('status', 'published')
+            ->latest()
+            ->take(3)
+            ->get();
+    
+        $event->append('available_slots');
     
         $payment = Payment::where('event_id', $event->id)
                           ->where('user_id', $authUser->id)
                           ->first();
     
         // Get attendance status from the pivot table
-        $attendanceStatus = $event->users()->where('user_id', $authUser->id)->first()?->pivot->attendance_status;
+        $attendanceStatus = $event->users()
+            ->where('user_id', $authUser->id)
+            ->first()?->pivot->attendance_status;
     
         return Inertia::render('EventShow', [
             'event' => $event,
-            'auth' => $authUser,
             'qrCodeSvg' => $event->generateQrCode($authUser),
             'hasJoined' => $event->users->contains($authUser),
             'isFull' => $event->isFull(),
             'paymentStatus' => $payment ? $payment->status : null,
             'cancellation_days_before' => $event->cancellation_days_before,
-            'attendance_status' => $attendanceStatus, // Pass the attendance status to the frontend
+            'attendance_status' => $attendanceStatus,
+            'relatedEvents' => $relatedEvents,
+            'user' => [  // Add this nested user object
+                'id' => $authUser->id,
+                'first_name' => $authUser->first_name,
+                'last_name' => $authUser->last_name,
+                'email' => $authUser->email,
+                'avatar' => $authUser->avatar,
+                // Add any other user properties you need
+            ]
         ]);
     }
 

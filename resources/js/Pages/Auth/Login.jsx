@@ -32,7 +32,7 @@ export default function Login({ status, canResetPassword }) {
 
     return (
         <div className="flex min-h-screen bg-gray-100">
-            <div className="hidden lg:block w-1/3 bg-gradient-to-r from-rose-400 to-red-500 text-white p-8">
+            <div className="hidden lg:block w-1/3 bg-gradient-to-br from-red-400 via-blue-500 to-yellow-400 text-white p-8">
                 <div className="flex flex-col justify-center h-full items-center">
                     
                     <Link href="/" >

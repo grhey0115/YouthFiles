@@ -31,53 +31,88 @@ class AyudaController extends Controller
                 // Filter closed assistance (status: Closed or Ended)
                 $closedAyudas = Ayuda::whereIn('status', ['Closed', 'Ended'])->get();
 
+                $topDonators = UserDonation::select('user_id', DB::raw('SUM(amount) as total_amount'))
+                    ->with('user')
+                    ->groupBy('user_id')
+                    ->orderByDesc('total_amount')
+                    ->limit(5)
+                    ->get()
+                    ->map(function ($donation) {
+                        return [
+                            'name' => $donation->user->name,
+                            'amount' => $donation->total_amount,
+                            'avatar_url' => $donation->user->avatar_url
+                        ];
+                    });
+
                 return Inertia::render('Ayuda', [
                     'openAyudas' => $openAyudas,  // Pass Open assistance
                     'closedAyudas' => $closedAyudas,  // Pass Closed assistance
-                   
+                   'topDonators' => $topDonators,
                 ]);
             }
 
 
-            public function show($id)
-            {
-                $ayuda = Ayuda::with([
-                    'requirements',
-                    'donations', // Make sure this relationship is loaded
-                    'volunteerOpportunities',
-                    'volunteerApplications' => function($query) {
-                        $query->where('user_id', auth()->id());
-                    }
-                ])->findOrFail($id);
+            public function show($id)  
+    {  
+    $ayuda = Ayuda::with([  
+        'requirements',  
+        'donations',  
+        'volunteerOpportunities',  
+        'volunteerApplications' => function($query) {  
+            $query->where('user_id', auth()->id());  
+        },  
+        
+    ])->findOrFail($id);  
+    
+    $authUser = Auth::user();  
 
-                // Debug the donations
-                \Log::info('Ayuda donations:', ['donations' => $ayuda->donations]);
+    $userDonations = UserDonation::where('ayuda_id', $ayuda->id)  
+      ->where('user_id', $authUser->id)  
+      ->get();  
 
-                $authUser = Auth::user();
+      $totalRaised = UserDonation::where('ayuda_id', $ayuda->id)  
+      ->where('status', 'approved') // Assuming you only want to count approved donations  
+      ->sum('amount');  
 
-                $userVolunteerApplications = VolunteerApplication::where('ayuda_id', $ayuda->id)
-                ->where('user_id', $authUser->id)
-                ->get();
-                
-                $ayudaApplicant = AyudaApplicant::where('ayuda_id', $ayuda->id)
-                                                ->where('user_id', $authUser->id)
-                                                ->first();
+      $donationGoal = $ayuda->donations->first() ? $ayuda->donations->first()->goal : null;
+    
+    // Calculate total donations raised from user_donations  
+    $totalDonationsRaised = $ayuda->userDonations->sum('amount');  
+    
+    $userVolunteerApplications = VolunteerApplication::where('ayuda_id', $ayuda->id)  
+        ->where('user_id', $authUser->id)  
+        ->get();  
+    
+        $totalRaised = UserDonation::where('ayuda_id', $ayuda->id)  
+        ->where('status', 'approved') // Assuming you only want to count approved donations  
+        ->sum('amount');  
+        
+    $ayudaApplicant = AyudaApplicant::where('ayuda_id', $ayuda->id)  
+        ->where('user_id', $authUser->id)  
+        ->first();  
+    
+        return Inertia::render('AyudaShow', [
+            'ayuda' => array_merge($ayuda->toArray(), [
+                'donation' => [
+                    'goal' => $donationGoal, // Correct goal calculation
+                    'raised' => $totalRaised, // Total amount raised
+                ],
+                'donation_raised' => $totalDonationsRaised, // Use the calculated total
+                'donations' => $ayuda->donations, // Include all donations
+                'userDonations' => $userDonations, // Include user donations
+            ]),
+            'ayudaApplicant' => $ayudaApplicant,
+            'assistanceReceived' => $ayudaApplicant ? $ayudaApplicant->assistance_received : false,
+            'volunteerOpportunities' => $ayuda->volunteerOpportunities,
+            'userApplications' => $ayuda->volunteerApplications,
+            'donationType' => $ayuda->donations->first()?->donation_type ?? 'money', // Default to "money"
+            'userVolunteerApplications' => $userVolunteerApplications,
+            'needsDonations' => $ayuda->needs_donations,
+            'needsVolunteer' => $ayuda->needs_volunteers,
+        ]);
+    }
 
-                return Inertia::render('AyudaShow', [
-                    'ayuda' => array_merge($ayuda->toArray(), [
-                        'donations' => $ayuda->donations, // Explicitly include donations
-                    ]),
-                    'auth' => $authUser,
-                    'ayudaApplicant' => $ayudaApplicant,
-                    'assistanceReceived' => $ayudaApplicant ? $ayudaApplicant->assistance_received : false,
-                    'volunteerOpportunities' => $ayuda->volunteerOpportunities,
-                    'userApplications' => $ayuda->volunteerApplications,
-                    'donationType' => $ayuda->donations->first() ? $ayuda->donations->first()->donation_type : 'money',
-                    'userVolunteerApplications' => $userVolunteerApplications,
-                    'needsDonations' => $ayuda->needs_donations,
-                    'needsVolunteer' => $ayuda->needs_volunteers,
-                ]);
-            }
 
     public function approveApplicant($applicantId)
     {
@@ -247,35 +282,30 @@ class AyudaController extends Controller
         return redirect()->back()->with('error', 'Applicant not found.');
     }
    // DonationController.php
-   public function donate(Request $request, $id)
+   public function donate(Request $request, Ayuda $ayuda)
    {
-       // No need for try-catch here; let Laravel handle exceptions
-       // Validate the request
        $validated = $request->validate([
-           'donation_id' => 'required|exists:donations,id',
-           'donation_type' => 'required|in:money',
            'amount' => 'required|numeric|min:1',
            'reference_number' => 'required|string',
-          
+           'receipt' => 'nullable|file|image|max:2048',
        ]);
-   
-       // Proceed with storing the donation
-       $donation = Donation::findOrFail($validated['donation_id']);
-       $receiptPath = $request->hasFile('receipt')
-           ? $request->file('receipt')->store('donation_receipts', 'public')
-           : null;
-   
-       UserDonation::create([
-           'user_id' => auth()->id(),
-           'donation_id' => $donation->id,
-           'ayuda_id' => $id,
-           'donation_type' => $validated['donation_type'],
-           'amount' => $validated['amount'],
-           'reference_number' => $validated['reference_number'],
-           'status' => 'pending',
-       ]);
-   
-       return redirect()->back()->with('success', 'Donation submitted successfully! Waiting for approval.');
+
+       try {
+           $receiptPath = $request->hasFile('receipt') ? $request->file('receipt')->store('receipts', 'public') : null;
+
+           Donation::create([
+               'ayuda_id' => $ayuda->id,
+               'user_id' => auth()->id(),
+               'amount' => $validated['amount'],
+               'reference_number' => $validated['reference_number'],
+               'receipt_image' => $receiptPath,
+               'status' => 'pending',
+           ]);
+
+           return redirect()->back()->with('success', 'Donation submitted successfully! Waiting for approval.');
+       } catch (\Exception $e) {
+           return redirect()->back()->with('error', 'Failed to submit donation. Please try again.');
+       }
    }
 
    public function volunteer(Request $request, $id)
@@ -310,4 +340,36 @@ class AyudaController extends Controller
    
        return redirect()->back()->with('success', 'Volunteer application submitted successfully!');
    }
+   public function updateGcashQr(Request $request, Ayuda $ayuda)
+    {
+        $request->validate([
+            'gcash_qr' => 'required|image|mimes:jpeg,png,jpg|max:2048',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Delete old QR code if exists
+            if ($ayuda->donation && $ayuda->donation->gcash_qr) {
+                Storage::disk('public')->delete($ayuda->donation->gcash_qr);
+            }
+
+            // Store new QR code
+            $qrPath = $request->file('gcash_qr')->store('gcash-qr', 'public');
+
+            // Update or create donation record
+            $ayuda->donation()->updateOrCreate(
+                ['ayuda_id' => $ayuda->id],
+                ['gcash_qr' => $qrPath]
+            );
+
+            DB::commit();
+
+            return redirect()->back()->with('success', 'GCash QR code updated successfully.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to update GCash QR code. Please try again.');
+        }
+    }
 }

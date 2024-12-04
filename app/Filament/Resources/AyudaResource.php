@@ -39,6 +39,8 @@ class AyudaResource extends Resource
     protected static ?string $navigationLabel = 'Assistance';
     protected static ?string $navigationGroup = 'Ayuda';
 
+    protected static ?string $recordTitleAttribute = 'title';
+
     public static function form(Form $form): Form
 {
     return $form
@@ -54,6 +56,10 @@ class AyudaResource extends Resource
 
             Forms\Components\Textarea::make('description')
                 ->label('Program Description')
+                ->required(),
+
+                Forms\Components\TextInput::make('location')
+                ->label('Location')
                 ->required(),
 
             Forms\Components\Select::make('sector')

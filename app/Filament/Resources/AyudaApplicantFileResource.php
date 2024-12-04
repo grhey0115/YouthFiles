@@ -21,7 +21,7 @@ class AyudaApplicantFileResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static bool $shouldRegisterNavigation = false;
-
+ 
     public static function form(Forms\Form $form): Forms\Form
     {
         return $form

@@ -16,6 +16,7 @@ use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Storage;
 
 
+
 class UsersResource extends Resource
 {
     protected static ?string $model = User::class;
@@ -23,6 +24,7 @@ class UsersResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
     protected static ?string $navigationGroup = 'User Management';
+    protected static ?string $recordTitleAttribute = 'full_name';
    
 
     public static function form(Form $form): Form

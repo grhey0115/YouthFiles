@@ -19,10 +19,12 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
+use Afsakar\FilamentOtpLogin\FilamentOtpLoginPlugin;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Saade\FilamentFullCalendar\FilamentFullCalendarPlugin;
-use Filament\Navigation\MenuItem;
 use CharrafiMed\GlobalSearchModal\GlobalSearchModalPlugin;
+use Filament\Navigation\MenuItem;
+use pxlrbt\FilamentSpotlight\SpotlightPlugin;
 
 
 class AdminPanelProvider extends PanelProvider
@@ -38,13 +40,14 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->globalSearch(true)
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
                 Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-               
+                \BezhanSalleh\FilamentGoogleAnalytics\Widgets\PageViewsWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -66,10 +69,14 @@ class AdminPanelProvider extends PanelProvider
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 \Hasnayeen\Themes\ThemesPlugin::make(),
                 FilamentSpatieLaravelHealthPlugin::make(),
-              GlobalSearchModalPlugin::make(),
                // ->closeByEscaping(enabled: false)
                FilamentApexChartsPlugin::make(),
                FilamentFullCalendarPlugin::make(),
+               FilamentOtpLoginPlugin::make(),
+               SpotlightPlugin::make(),
+               GlobalSearchModalPlugin::make(),
+               \BezhanSalleh\FilamentGoogleAnalytics\FilamentGoogleAnalyticsPlugin::make(),
+             
             ])
 
             ->databaseNotifications()
@@ -83,12 +90,12 @@ class AdminPanelProvider extends PanelProvider
                 'Rewards Management',
                 'Community Services',
                 'Financial Services',
+            
                 
             ])
             ->userMenuItems([
                 MenuItem::make()
-                    ->label('Settings')
-                    ->icon('heroicon-o-cog-6-tooth'),
+                   
                 // ...
             ])
 

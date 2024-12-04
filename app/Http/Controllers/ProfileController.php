@@ -26,57 +26,86 @@ class ProfileController extends Controller
             'emergencyContact' => $request->user()->emergencyContact,
         ]);
     }
-        public function upload(Request $request)
-        {
-            // Validate that the files are images or PDFs
-            $request->validate([
-                'valid_id_paths.*' => 'required|image|mimes:jpeg,png,jpg,pdf|max:2048',
-            ]);
-        
-            $filePaths = [];
-            // Check if files are present in the request
-            if ($request->hasfile('valid_id_paths')) {
-                foreach ($request->file('valid_id_paths') as $file) {
-                    // Store the files in the storage/app/public/valid_ids directory
-                    $path = $file->store('valid_ids', 'public'); // This saves in storage/app/public/valid_ids
-                    $filePaths[] = $path; // Collect the paths
-                }
-            }
-        
-            // Save the file paths to the user's personal information in the database
-            PersonalInformation::updateOrCreate(
-                ['user_id' => $request->user()->id],
-                ['valid_id_path' => json_encode($filePaths)] // Save the paths as JSON
-            );
-        
-            return response()->json(['success' => 'Files uploaded successfully.']);
-        }
+    
+
+    
     public function postStep1(Request $request): RedirectResponse
+        {
+            try {
+                // Validate the request
+                $validated = $request->validate([
+                    'barangay' => 'required|string|max:255',
+                    'sitio' => 'nullable|string|max:255',
+                    'religion' => 'nullable|string|max:255',
+                    'date_of_birth' => 'required|date',
+                    'age' => 'required|integer',
+                    'civil_status' => 'required|string|max:255',
+                    'is_solo_parent' => 'required|boolean',
+                    'gender' => 'required|string|max:255',
+                    'family_members' => 'nullable|integer',
+                    'siblings' => 'nullable|integer',
+                    'front_id' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+                    'back_id' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+                ]);
+
+                // Initialize the data array with validated data
+                $personalInfo = $validated;
+                
+                // Handle front_id file
+                if ($request->hasFile('front_id')) {
+                    $frontIdFile = $request->file('front_id');
+                    if ($frontIdFile->isValid()) {
+                        $frontIdPath = $frontIdFile->store('ids', 'public');
+                        $personalInfo['front_id'] = $frontIdPath;
+                        \Log::info('Front ID stored at: ' . $frontIdPath); // Debugging
+                    }
+                }
+
+                // Handle back_id file
+                if ($request->hasFile('back_id')) {
+                    $backIdFile = $request->file('back_id');
+                    if ($backIdFile->isValid()) {
+                        $backIdPath = $backIdFile->store('ids', 'public');
+                        $personalInfo['back_id'] = $backIdPath;
+                        \Log::info('Back ID stored at: ' . $backIdPath); // Debugging
+                    }
+                }
+
+                // Add user_id to the data
+                $personalInfo['user_id'] = $request->user()->id;
+
+                // Debug the data before saving
+                \Log::info('Personal Info Data:', $personalInfo);
+
+                // Find existing record or create new one
+                $personalInformation = PersonalInformation::updateOrCreate(
+                    ['user_id' => $request->user()->id],
+                    $personalInfo
+                );
+
+                // Verify the saved data
+                \Log::info('Saved Personal Information:', $personalInformation->toArray());
+
+                return Redirect::route('profile.form')
+                    ->with('success', 'Personal information updated successfully.');
+
+            } catch (\Exception $e) {
+                \Log::error('Error in postStep1: ' . $e->getMessage());
+                \Log::error('Stack trace: ' . $e->getTraceAsString());
+                return Redirect::route('profile.form')
+                    ->with('error', 'There was an error saving your information: ' . $e->getMessage())
+                    ->withInput();
+            }
+        }
+    private function handleFileUpdate($model, $newFile, $fieldName)
     {
-        $request->validate([
-            'barangay' => 'required|string|max:255',
-            'sitio' => 'nullable|string|max:255',
-            'religion' => 'nullable|string|max:255',
-            'date_of_birth' => 'required|date',
-            'age' => 'required|integer',
-            'civil_status' => 'required|string|max:255',
-            'is_solo_parent' => 'required|boolean',
-            'gender' => 'required|string|max:255',
-            'family_members' => 'nullable|integer',
-            'siblings' => 'nullable|integer',
-            'valid_id_path' => 'nullable|string|max:255'
-        ]);
-
-        PersonalInformation::updateOrCreate(
-            ['user_id' => $request->user()->id],
-            $request->only([
-                'barangay', 'sitio', 'religion','date_of_birth','age', 'civil_status',
-                'is_solo_parent', 'gender', 'family_members',
-                'siblings', 'valid_id_path'
-            ])
-        );
-
-        return Redirect::route('profile.form');
+        // Delete old file if it exists
+        if ($model->$fieldName) {
+            Storage::disk('public')->delete($model->$fieldName);
+        }
+        
+        // Store new file
+        return $newFile->store('ids', 'public');
     }
 
     public function postStep2(Request $request): RedirectResponse
@@ -161,7 +190,7 @@ class ProfileController extends Controller
         'educationalBackground' => $user->educationalBackground,
         'additionalInformation' => $user->additionalInformation,
         'emergencyContact' => $user->emergencyContact,
-        'mustVerifyEmail' => $user instanceof MustVerifyEmail,
+       // 'mustVerifyEmail' => $user instanceof MustVerifyEmail,
         'status' => session('status'),
     ]);
 }

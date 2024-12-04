@@ -1,3 +1,93 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .share-button {
+        @apply transition-all duration-300 transform hover:scale-110;
+    }
+    
+    .related-event-card {
+        @apply transition-all duration-300 hover:shadow-lg;
+    }
+}
+
+/* Custom Progress Bar for Points */
+.custom-progress .ant-progress-bg {
+  height: 8px !important;
+  border-radius: 4px;
+}
+
+/* Reward Card Animations */
+.reward-card {
+  transition: all 0.3s ease;
+}
+
+.reward-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Progress Bar Colors */
+.ant-progress-bg {
+  background: linear-gradient(90deg, #52c41a 0%, #1890ff 100%);
+}
+
+/* Profile Tabs Styling */
+.profile-tabs .ant-tabs-nav {
+  margin-bottom: 24px !important;
+}
+
+.profile-tabs .ant-tabs-tab {
+  padding: 12px 0;
+  font-size: 16px;
+  transition: all 0.3s;
+}
+
+.profile-tabs .ant-tabs-tab:hover {
+  color: #1890ff;
+}
+
+.profile-tabs .ant-tabs-tab.ant-tabs-tab-active {
+  font-weight: 600;
+}
+
+.profile-tabs .ant-tabs-ink-bar {
+  height: 3px;
+  border-radius: 3px;
+}
+
+/* Card hover effects */
+.ant-card.shadow-sm {
+  transition: all 0.3s ease;
+}
+
+.ant-card.shadow-sm:hover {
+  transform: translateY(-2px);
+}
+
+/* Ayuda Show Page Styles */
+.ant-card {
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.ant-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.ant-steps-item-title {
+  font-weight: 500 !important;
+}
+
+.ant-timeline-item-content {
+  margin-left: 24px !important;
+}
+
+.ant-progress-text {
+  font-weight: 600 !important;
+}
+
+.sticky {
+  position: sticky;
+  top: 24px;
+}

@@ -86,6 +86,7 @@ Route::middleware('auth')->group(function () {
       Route::post('/profile-step2', [ProfileController::class, 'postStep2'])->name('profile.step2');
       Route::post('/profile-step3', [ProfileController::class, 'postStep3'])->name('profile.step3');
       Route::post('/profile-step4', [ProfileController::class, 'postStep4'])->name('profile.step4');
+      Route::post('/upload', [ProfileController::class, 'upload']);
 
 
       // Routes for ayuda
@@ -199,7 +200,9 @@ Route::middleware('auth')->group(function () {
                 ->name('gcash.redemption.configs');
 
             Route::get('/your.events.fetch', [EventController::class, 'fetchUserEvents'])->name('your.events.fetch');
-             
+            
+            
+
 });
 
 require __DIR__.'/auth.php';

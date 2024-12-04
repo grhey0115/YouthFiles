@@ -1,5 +1,25 @@
 import React from 'react';
-import { Card, Descriptions } from 'antd';
+import { Card, Descriptions, Badge, Divider } from 'antd';
+import { 
+  UserOutlined, 
+  BookOutlined, 
+  InfoCircleOutlined, 
+  PhoneOutlined,
+  HomeOutlined,
+  CalendarOutlined,
+  TeamOutlined,
+  HeartOutlined
+} from '@ant-design/icons';
+
+const DescriptionItem = ({ label, value, icon }) => (
+  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-md">
+    {icon && <span className="text-gray-500 mt-1">{icon}</span>}
+    <div>
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="font-medium">{value || 'Not provided'}</p>
+    </div>
+  </div>
+);
 
 export default function ProfileInfo({ 
   personalInformation, 
@@ -8,75 +28,134 @@ export default function ProfileInfo({
   emergencyContact 
 }) {
   return (
-    <div className="p-6 bg-white">
+    <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <Card title="Personal Information" bordered={false}>
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Sitio">{personalInformation?.sitio || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Birth Date">{personalInformation?.date_of_birth || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Age">{personalInformation?.age || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Civil Status">{personalInformation?.civil_status || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Religion">{personalInformation?.religion || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Gender">{personalInformation?.gender || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Family Members">{personalInformation?.family_members || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Siblings">{personalInformation?.siblings || "N/A"}</Descriptions.Item>
-          </Descriptions>
+        <Card 
+          title={
+            <div className="flex items-center gap-2">
+              <UserOutlined />
+              <span>Personal Information</span>
+            </div>
+          }
+          className="shadow-md hover:shadow-lg transition-shadow"
+        >
+          <div className="grid gap-4">
+            <DescriptionItem 
+              label="Sitio"
+              value={personalInformation?.sitio}
+              icon={<HomeOutlined />}
+            />
+            <DescriptionItem 
+              label="Birth Date & Age"
+              value={`${personalInformation?.date_of_birth} (${personalInformation?.age} years old)`}
+              icon={<CalendarOutlined />}
+            />
+            <DescriptionItem 
+              label="Civil Status"
+              value={personalInformation?.civil_status}
+              icon={<HeartOutlined />}
+            />
+            <DescriptionItem 
+              label="Family Members"
+              value={`${personalInformation?.family_members} members, ${personalInformation?.siblings} siblings`}
+              icon={<TeamOutlined />}
+            />
+          </div>
         </Card>
 
         {/* Educational Background */}
-        <Card title="Educational Background" bordered={false}>
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Current Status">{educationalBackground?.current_status || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Course">{educationalBackground?.course || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Year Graduated">{educationalBackground?.year_graduated || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Year Level">{educationalBackground?.year_level || "N/A"}</Descriptions.Item>
-          </Descriptions>
+        <Card 
+          title={
+            <div className="flex items-center gap-2">
+              <BookOutlined />
+              <span>Educational Background</span>
+            </div>
+          }
+          className="shadow-md hover:shadow-lg transition-shadow"
+        >
+          <div className="grid gap-4">
+            <DescriptionItem 
+              label="Current Status"
+              value={
+                <Badge 
+                  status={educationalBackground?.current_status === 'Studying' ? 'processing' : 'success'} 
+                  text={educationalBackground?.current_status}
+                />
+              }
+            />
+            <DescriptionItem 
+              label="Course & Year Level"
+              value={`${educationalBackground?.course} (${educationalBackground?.year_level})`}
+            />
+            <DescriptionItem 
+              label="Year Graduated"
+              value={educationalBackground?.year_graduated}
+            />
+          </div>
         </Card>
 
         {/* Additional Information */}
-        <Card title="Additional Information" bordered={false}>
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Currently Working">
-              {additionalInformation.is_currently_working === "1" ? "Yes" : "No"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Hobbies">
-              {additionalInformation?.hobbies?.join(", ") || "N/A"}
-            </Descriptions.Item>
-            <Descriptions.Item label="PWD">
-              {additionalInformation?.is_pwd === "1" ? "Yes" : "No"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Conflict with Law">
-              {additionalInformation?.has_conflict_with_law === "1" ? "Yes" : "No"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Indigenous">
-              {additionalInformation?.is_indigenous === "1" ? "Yes" : "No"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Registered Voter">
-              {additionalInformation?.is_registered_voter === "1" ? "Yes" : "No"}
-            </Descriptions.Item>
-            <Descriptions.Item label="Attended Assembly">
-              {additionalInformation?.attended_assembly === "1" ? "Yes" : "No"}
-            </Descriptions.Item>
-            {additionalInformation?.attended_assembly === "0" && (
-              <Descriptions.Item label="Why No Assembly">
-                {additionalInformation?.why_no_assembly || "N/A"}
-              </Descriptions.Item>
-            )}
-            <Descriptions.Item label="Residency Status">
-              {additionalInformation?.residency_status || "N/A"}
-            </Descriptions.Item>
-          </Descriptions>
+        <Card 
+          title={
+            <div className="flex items-center gap-2">
+              <InfoCircleOutlined />
+              <span>Additional Information</span>
+            </div>
+          }
+          className="shadow-md hover:shadow-lg transition-shadow"
+        >
+          <div className="grid gap-4">
+            {/* Convert boolean values to badges */}
+            {Object.entries({
+              'Currently Working': additionalInformation?.is_currently_working === "1",
+              'PWD': additionalInformation?.is_pwd === "1",
+              'Indigenous': additionalInformation?.is_indigenous === "1",
+              'Registered Voter': additionalInformation?.is_registered_voter === "1",
+              'Attended Assembly': additionalInformation?.attended_assembly === "1"
+            }).map(([label, value]) => (
+              <DescriptionItem 
+                key={label}
+                label={label}
+                value={
+                  <Badge 
+                    status={value ? 'success' : 'default'} 
+                    text={value ? 'Yes' : 'No'}
+                  />
+                }
+              />
+            ))}
+            <DescriptionItem 
+              label="Hobbies"
+              value={additionalInformation?.hobbies?.join(", ")}
+            />
+          </div>
         </Card>
 
         {/* Emergency Contact */}
-        <Card title="Emergency Contact" bordered={false}>
-          <Descriptions column={1} bordered size="small">
-            <Descriptions.Item label="Name">{emergencyContact?.name || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Relationship">{emergencyContact?.relationship || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Contact Number">{emergencyContact?.contact_number || "N/A"}</Descriptions.Item>
-            <Descriptions.Item label="Address">{emergencyContact?.address || "N/A"}</Descriptions.Item>
-          </Descriptions>
+        <Card 
+          title={
+            <div className="flex items-center gap-2">
+              <PhoneOutlined />
+              <span>Emergency Contact</span>
+            </div>
+          }
+          className="shadow-md hover:shadow-lg transition-shadow"
+        >
+          <div className="grid gap-4">
+            <DescriptionItem 
+              label="Name & Relationship"
+              value={`${emergencyContact?.name} (${emergencyContact?.relationship})`}
+            />
+            <DescriptionItem 
+              label="Contact Number"
+              value={emergencyContact?.contact_number}
+            />
+            <DescriptionItem 
+              label="Address"
+              value={emergencyContact?.address}
+            />
+          </div>
         </Card>
       </div>
     </div>

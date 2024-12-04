@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Avatar, Card, Button, Upload, message } from 'antd';
-import { UserOutlined, CheckCircleFilled } from '@ant-design/icons';
-import { FaCamera } from 'react-icons/fa';
+import { Avatar, Card, Button, Upload, message, Tooltip } from 'antd';
+import { UserOutlined, CheckCircleFilled, CameraOutlined } from '@ant-design/icons';
 import axios from 'axios';
 
 export default function ProfileHeader({ user }) {
@@ -51,7 +50,7 @@ export default function ProfileHeader({ user }) {
     <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Card
         bordered={false}
-        className="flex items-center bg-gradient-to-r from-red-500 to-gray-700 text-white p-6 rounded-t-lg relative"
+        className="flex items-center bg-gradient-to-br from-red-400 via-blue-500 to-yellow-400 text-white p-6 rounded-t-lg relative shadow-lg"
       >
         <div className="relative inline-block">
           <Avatar
@@ -59,46 +58,46 @@ export default function ProfileHeader({ user }) {
             size={100}
             icon={<UserOutlined />}
             alt="User Avatar"
-            className="object-cover"
+            className="object-cover border-4 border-white shadow-md"
           />
-          {/* Verification Badge - Positioned at the bottom center */}
-          
           <Upload
             name="avatar"
             accept="image/*"
             showUploadList={false}
             customRequest={customRequest}
           >
-            <Button
-              icon={<FaCamera />}
-              className="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full text-white hover:bg-gray-700"
-              style={{ 
-                position: 'absolute', 
-                bottom: '-3px', 
-                right: '5px',
-                zIndex: 10 
-              }}
-            />
+            <Tooltip title="Change Avatar">
+              <Button
+                icon={<CameraOutlined />}
+                className="absolute bottom-0 right-0 bg-gray-800 p-2 rounded-full text-white hover:bg-gray-700"
+                style={{ 
+                  position: 'absolute', 
+                  bottom: '-3px', 
+                  right: '5px',
+                  zIndex: 10 
+                }}
+              />
+            </Tooltip>
           </Upload>
         </div>
         <div className="ml-4 flex flex-col">
-            <div className="flex items-center">
-                <h1 className="text-xl font-semibold mr-2">
-                {user?.first_name} {user?.last_name}
-                </h1>
-                {user.account_status === 'verified' && (
-                <CheckCircleFilled 
-                    style={{ 
-                    color: '#1877F2', // Facebook blue
-                    fontSize: '16px' 
-                    }} 
-                />
-                )}
-            </div>
-            <p className="text-gray-200">
-                {user?.email}
-            </p>
-            </div>
+          <div className="flex items-center">
+            <h1 className="text-xl font-semibold mr-2">
+              {user?.first_name} {user?.last_name}
+            </h1>
+            {user.account_status === 'verified' && (
+              <CheckCircleFilled 
+                style={{ 
+                  color: 'yellow', // Facebook blue
+                  fontSize: '16px' 
+                }} 
+              />
+            )}
+          </div>
+          <p className="text-gray-200">
+            {user?.email}
+          </p>
+        </div>
       </Card>
     </div>
   );

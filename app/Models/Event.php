@@ -148,7 +148,7 @@ class Event extends Model
 
         return max(0, $availableSlots);
     }
-
+    protected $appends = ['available_slots'];
     // Scopes for filtering
     public function scopeWithCertificates($query)
     {
