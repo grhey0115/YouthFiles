@@ -31,12 +31,12 @@ jobs:
     - name: Build NPM Assets
       run: npm run build
 
-      - name: Deploy to Plesk
-        env:
+    - name: Deploy to Plesk
+      env:
           PLESK_USERNAME: ${{ secrets.PLESK_USERNAME }}
           PLESK_PASSWORD: ${{ secrets.PLESK_PASSWORD }}
           PLESK_HOST: ${{ secrets.PLESK_HOST }}
-        run: |
+      run: |
           sshpass -p $PLESK_PASSWORD ssh -o StrictHostKeyChecking=no $PLESK_USERNAME@$PLESK_HOST << 'EOF'
           cd /var/www/vhosts/yourdomain.com/httpdocs  # Adjust path as necessary
           git pull origin main  # Pull the latest code from the repository
