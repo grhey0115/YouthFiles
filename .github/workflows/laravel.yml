@@ -31,22 +31,17 @@ jobs:
     - name: Build NPM Assets
       run: npm run build
 
-    - name: Synchronize Files To Server
-      uses: easingthemes/ssh-deploy@v2.1.5
-      env:
-         PLESK_USERNAME: ${{ secrets.PLESK_USERNAME }}
+      - name: Deploy to Plesk
+        env:
+          PLESK_USERNAME: ${{ secrets.PLESK_USERNAME }}
           PLESK_PASSWORD: ${{ secrets.PLESK_PASSWORD }}
           PLESK_HOST: ${{ secrets.PLESK_HOST }}
-
-    - name: Run Remote/Artisan Commands
-      uses: appleboy/ssh-action@v0.1.6
-      with:
-        host: ${{ secrets.VPS_HOST }}
-        username: ${{ secrets.VPS_USER }}
-        key: ${{ secrets.SSH_PRIVATE_KEY }}
-        script: |
-          cd /var/www/html/glennraya.com
-          php artisan migrate --force
-          php artisan optimize
-
-      
+        run: |
+          sshpass -p $PLESK_PASSWORD ssh -o StrictHostKeyChecking=no $PLESK_USERNAME@$PLESK_HOST << 'EOF'
+          cd /var/www/vhosts/yourdomain.com/httpdocs  # Adjust path as necessary
+          git pull origin main  # Pull the latest code from the repository
+          composer install --no-dev --optimize-autoloader  # Install PHP dependencies
+          npm install  # Install JS dependencies if necessary
+          npm run build  # Run the build process if applicable
+          php artisan migrate --force  # Run migrations if necessary
+          EOF
