@@ -21,6 +21,9 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: '20'
+        
+    - name: Fix Permissions
+      run: chmod -R +x node_modules/.bin
 
     - name: Install NPM Dependencies
       run: npm install
