@@ -1,0 +1,54 @@
+name: Deploy Laravel Application to Production Server
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v3
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.3
+
+    - name: Install Node
+      uses: actions/setup-node@v3
+      with:
+        node-version: '20'
+        
+    - name: Fix Permissions
+      run: chmod -R +x node_modules/.bin
+
+    - name: Install NPM Dependencies
+      run: npm install
+
+    - name: Build NPM Assets
+      run: npm run build
+
+    - name: Deploy to Plesk
+      env:
+        PLESK_USERNAME: ${{ secrets.PLESK_USERNAME }}
+        PLESK_PASSWORD: ${{ secrets.PLESK_PASSWORD }}
+        PLESK_HOST: ${{ secrets.PLESK_HOST }}
+      run: |
+        # Install sshpass if it is not available on the runner
+        sudo apt-get install sshpass
+
+        # Use sshpass to deploy the application
+        sshpass -p $PLESK_PASSWORD ssh -o StrictHostKeyChecking=no $PLESK_USERNAME@$PLESK_HOST << 'EOF'
+        cd /var/www/vhosts/skyouthfiles.site/httpdocs  # Adjust the path to your server directory
+        git pull origin main  # Pull the latest code from the repository
+        composer install --no-dev --optimize-autoloader  # Install PHP dependencies
+        npm install  # Install JS dependencies if necessary
+        npm run build  # Build assets
+        php artisan migrate --force  # Run migrations
+        php artisan config:cache  # Cache the configuration
+        php artisan route:cache  # Cache the routes
+        php artisan optimize  # Optimize the application
+        EOF
