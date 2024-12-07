@@ -203,6 +203,7 @@ return array(
     'App\\Http\\Middleware\\EnsureProfileIsComplete' => $baseDir . '/app/Http/Middleware/EnsureProfileIsComplete.php',
     'App\\Http\\Middleware\\HandleInertiaRequests' => $baseDir . '/app/Http/Middleware/HandleInertiaRequests.php',
     'App\\Http\\Middleware\\ShareNotifications' => $baseDir . '/app/Http/Middleware/ShareNotifications.php',
+    'App\\Http\\Middleware\\VerifyOTP' => $baseDir . '/app/Http/Middleware/VerifyOTP.php',
     'App\\Http\\Requests\\Auth\\LoginRequest' => $baseDir . '/app/Http/Requests/Auth/LoginRequest.php',
     'App\\Http\\Requests\\ProfileUpdateRequest' => $baseDir . '/app/Http/Requests/ProfileUpdateRequest.php',
     'App\\Models\\AICS' => $baseDir . '/app/Models/AICS.php',

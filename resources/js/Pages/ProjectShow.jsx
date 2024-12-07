@@ -197,8 +197,7 @@ const ProjectShow = () => {
     const disbursementColumns = [
         {
             title: 'DV No.',
-            dataIndex: 'dv_no',
-            key: 'dv_no',
+            dataIndex: 'disbursement_no', 
             render: (text) => <strong>{text}</strong>,
         },
         {

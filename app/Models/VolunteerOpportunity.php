@@ -7,7 +7,14 @@ use Illuminate\Database\Eloquent\Model;
 class VolunteerOpportunity extends Model
 {
     protected $fillable = [
-        'ayuda_id', 'role_title', 'slots', 'description', 'start_date', 'end_date', 'requirements', 'is_active',
+        'ayuda_id', 
+        'role_title', 
+        'slots', 
+        'description', 
+        'start_date', 
+        'end_date', 
+        'requirements', 
+        'is_active',
     ];
 
     public function ayuda()

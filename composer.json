@@ -14,7 +14,7 @@
         "charrafimed/global-search-modal": "^3.4",
         "dotswan/filament-laravel-pulse": "^1.1",
         "dotswan/filament-map-picker": "^1.4",
-        "filament/filament": "^3.2",
+        "filament/filament": "v3.2.124",
         "filament/notifications": "^3.2",
         "hasnayeen/themes": "^3.0",
         "hugomyb/filament-media-action": "^3.1",

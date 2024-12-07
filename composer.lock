@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "df7b054137dc83f6b064fd39d5e3193e",
+    "content-hash": "17d6b8115bd5b87aa3014caab225b59f",
     "packages": [
         {
             "name": "afsakar/filament-otp-login",
