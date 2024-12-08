@@ -11,7 +11,9 @@ import {
     Col, 
     Input, 
     Button, 
-    Select 
+    Select, 
+    Divider, 
+    Space 
 } from 'antd';
 import { 
     UploadOutlined, 
@@ -21,29 +23,93 @@ import {
     PhoneOutlined,
 } from '@ant-design/icons';
 import styled from "styled-components";
+import { motion } from 'framer-motion';
 
-// Styled Components
+// Updated Styled Components
 const StyledWrapper = styled.div`
-    padding: 40px 20px;
-    background-color: #f9fafb;
-    border-radius: 10px;
+    padding: 40px;
+    background: linear-gradient(135deg, #f6f9fc 0%, #f1f4f8 100%);
+    min-height: calc(100vh - 64px);
 `;
 
 const Header = styled.div`
-    margin-bottom: 30px;
+    margin-bottom: 50px;
     text-align: center;
+    padding: 40px 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
 `;
 
-const StyledCard = styled(Card)`
-    background-color: #e6f7ff;
-    color: #333;
-    border-radius: 12px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s, box-shadow 0.3s;
+const StyledCard = styled(motion.div)`
+    background: white;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    height: 100%;
+    
+    .ant-card-head-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+    }
 
-    &:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+    .service-icon {
+        font-size: 40px;
+        margin-bottom: 20px;
+        display: block;
+        text-align: center;
+    }
+
+    .service-title {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: #1a1a1a;
+        font-weight: 600;
+    }
+
+    .service-description {
+        color: #666;
+        font-size: 1rem;
+        line-height: 1.6;
+    }
+`;
+
+const StyledModal = styled(Modal)`
+    .ant-modal-content {
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .ant-modal-header {
+        padding: 24px;
+        background: #f8fafc;
+        border-bottom: 1px solid #edf2f7;
+    }
+
+    .ant-modal-body {
+        padding: 24px;
+    }
+
+    .form-section {
+        margin-bottom: 24px;
+    }
+`;
+
+const StyledButton = styled(Button)`
+    height: 45px;
+    font-size: 1rem;
+    font-weight: 500;
+    border-radius: 8px;
+    
+    &.ant-btn-primary {
+        background: #1890ff;
+        border-color: #1890ff;
+        
+        &:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
     }
 `;
 
@@ -341,53 +407,68 @@ const HelpCenter = () => {
         <AuthenticatedLayout user={auth}>
             <StyledWrapper>
                 <Header>
-                    <Typography.Title level={2}>
-                        Get Assistance from Our Help Center
+                    <Typography.Title level={1} style={{ fontSize: '2.5rem', marginBottom: '16px' }}>
+                        Community Help Center
                     </Typography.Title>
-                    <Typography.Text>
-                        Need help with equipment, tanod services, or emergency assistance? Our Help Center is here to support you.
+                    <Typography.Text style={{ fontSize: '1.1rem', color: '#666' }}>
+                        Access quick assistance and support services for our community members
                     </Typography.Text>
                 </Header>
-                
-                <Row gutter={16} justify="center">
+
+                <Row gutter={[24, 24]} justify="center">
+                    {/* Emergency Assistance Card */}
                     <Col xs={24} sm={12} md={8}>
-                        <StyledCard 
-                            title="SK Emergency Assistance" 
-                            onClick={handleOpenEmergencyModal} 
-                            hoverable
-                            extra={<ExclamationCircleOutlined style={{ fontSize: '24px', color: '#dc3545' }} />}
+                        <StyledCard
+                            whileHover={{ y: -8 }}
+                            transition={{ duration: 0.3 }}
+                            onClick={handleOpenEmergencyModal}
                         >
-                            <Typography.Text>Request urgent SK community support.</Typography.Text>
+                            <ExclamationCircleOutlined className="service-icon" style={{ color: '#dc3545' }} />
+                            <h3 className="service-title">Emergency Assistance</h3>
+                            <p className="service-description">
+                                Get immediate support for urgent situations. Available 24/7 for community emergencies.
+                            </p>
                         </StyledCard>
                     </Col>
+
+                    {/* Tanod Request Card */}
                     <Col xs={24} sm={12} md={8}>
-                        <StyledCard 
-                            title="Tanod Request" 
-                            onClick={handleOpenTanodModal} 
-                            hoverable
-                            extra={<SafetyCertificateOutlined style={{ fontSize: '24px', color: '#28a745' }} />}
+                        <StyledCard
+                            whileHover={{ y: -8 }}
+                            transition={{ duration: 0.3 }}
+                            onClick={handleOpenTanodModal}
                         >
-                            <Typography.Text>Request Tanod service.</Typography.Text>
+                            <SafetyCertificateOutlined className="service-icon" style={{ color: '#28a745' }} />
+                            <h3 className="service-title">Tanod Services</h3>
+                            <p className="service-description">
+                                Request security assistance from our community tanod for your safety needs.
+                            </p>
                         </StyledCard>
                     </Col>
+
+                    {/* Equipment Borrowing Card */}
                     <Col xs={24} sm={12} md={8}>
-                        <StyledCard 
-                            title="Borrow Equipment" 
-                            onClick={handleOpenBorrowModal} 
-                            hoverable
-                            extra={<ToolOutlined style={{ fontSize: '24px', color: '#ffc107' }} />}
+                        <StyledCard
+                            whileHover={{ y: -8 }}
+                            transition={{ duration: 0.3 }}
+                            onClick={handleOpenBorrowModal}
                         >
-                            <Typography.Text>Borrow equipment easily.</Typography.Text>
+                            <ToolOutlined className="service-icon" style={{ color: '#ffc107' }} />
+                            <h3 className="service-title">Equipment Borrowing</h3>
+                            <p className="service-description">
+                                Access community equipment and resources for your events and activities.
+                            </p>
                         </StyledCard>
                     </Col>
                 </Row>
 
-                {/* Borrow Equipment Modal */}
-                <Modal 
-                    title="Borrow Equipment" 
+                {/* Modals with improved styling */}
+                <StyledModal 
+                    title={<Typography.Title level={3}>Borrow Equipment</Typography.Title>}
                     open={openBorrowModal} 
                     onCancel={handleCloseBorrowModal}
                     footer={null}
+                    width={800}
                 >
                     <form onSubmit={handleSubmitBorrow}>
                         <Row gutter={16}>
@@ -435,14 +516,14 @@ const HelpCenter = () => {
                             </>
                         )}
                     </form>
-                </Modal>
+                </StyledModal>
 
-                {/* Tanod Request Modal */}
-                <Modal 
-                    title="Tanod Request" 
+                <StyledModal 
+                    title={<Typography.Title level={3}>Request Tanod Service</Typography.Title>}
                     open={openTanodModal} 
                     onCancel={handleCloseTanodModal}
                     footer={null}
+                    width={600}
                 >
                     <form onSubmit={handleSubmitTanodRequest}>
                         <Input 
@@ -475,58 +556,58 @@ const HelpCenter = () => {
                             Submit Tanod Request
                         </Button>
                     </form>
-                </Modal>
+                </StyledModal>
 
-              {/* SK Emergency Assistance Modal */}
-                    <Modal 
-                        title="SK Emergency Assistance Request" 
-                        open={openEmergencyModal} 
-                        onCancel={handleCloseEmergencyModal}
-                        footer={null}
-                    >
-                        <form onSubmit={handleEmergencyRequest}>
-                            <Input 
-                                placeholder="Contact Number" 
-                                value={emergencyData.contact}
-                                onChange={(e) => setEmergencyData('contact', e.target.value)}
-                                style={{ marginBottom: '8px' }} 
-                                required
-                                prefix={<PhoneOutlined />}
-                            />
-                            <Select 
-                                placeholder="Type of SK Emergency Assistance"
-                                style={{ width: '100%', marginBottom: '8px' }}
-                                value={emergencyData.assistanceType}
-                                onChange={(value) => setEmergencyData('assistanceType', value)}
-                                required
-                            >
-                                <Select.Option value="health">Health Assistance</Select.Option>
-                                <Select.Option value="financial">Financial Support</Select.Option>
-                                <Select.Option value="education">Educational Aid</Select.Option>
-                                <Select.Option value="community">Community Safety</Select.Option>
-                                <Select.Option value="personal">Personal Crisis</Select.Option>
-                            </Select>
-                            <Input.TextArea 
-                                placeholder="Describe Your Emergency or Need" 
-                                rows={4}
-                                value={emergencyData.description}
-                                onChange={(e) => setEmergencyData('description', e.target.value)}
-                                style={{ marginBottom: '8px' }}
-                                required
-                            />
-                            <Upload {...emergencyUploadProps}>
-                                <Button icon={<UploadOutlined />}>Upload Supporting Document</Button>
-                            </Upload>
-                            <Button 
-                                type="primary" 
-                                htmlType="submit" 
-                                loading={processingEmergency}
-                                style={{ marginTop: '16px', width: '100%' }}
-                            >
-                                Submit SK Emergency Request
-                            </Button>
-                        </form>
-                    </Modal>
+                <StyledModal 
+                    title={<Typography.Title level={3}>Emergency Assistance Request</Typography.Title>}
+                    open={openEmergencyModal} 
+                    onCancel={handleCloseEmergencyModal}
+                    footer={null}
+                    width={600}
+                >
+                    <form onSubmit={handleEmergencyRequest}>
+                        <Input 
+                            placeholder="Contact Number" 
+                            value={emergencyData.contact}
+                            onChange={(e) => setEmergencyData('contact', e.target.value)}
+                            style={{ marginBottom: '8px' }} 
+                            required
+                            prefix={<PhoneOutlined />}
+                        />
+                        <Select 
+                            placeholder="Type of SK Emergency Assistance"
+                            style={{ width: '100%', marginBottom: '8px' }}
+                            value={emergencyData.assistanceType}
+                            onChange={(value) => setEmergencyData('assistanceType', value)}
+                            required
+                        >
+                            <Select.Option value="health">Health Assistance</Select.Option>
+                            <Select.Option value="financial">Financial Support</Select.Option>
+                            <Select.Option value="education">Educational Aid</Select.Option>
+                            <Select.Option value="community">Community Safety</Select.Option>
+                            <Select.Option value="personal">Personal Crisis</Select.Option>
+                        </Select>
+                        <Input.TextArea 
+                            placeholder="Describe Your Emergency or Need" 
+                            rows={4}
+                            value={emergencyData.description}
+                            onChange={(e) => setEmergencyData('description', e.target.value)}
+                            style={{ marginBottom: '8px' }}
+                            required
+                        />
+                        <Upload {...emergencyUploadProps}>
+                            <Button icon={<UploadOutlined />}>Upload Supporting Document</Button>
+                        </Upload>
+                        <Button 
+                            type="primary" 
+                            htmlType="submit" 
+                            loading={processingEmergency}
+                            style={{ marginTop: '16px', width: '100%' }}
+                        >
+                            Submit SK Emergency Request
+                        </Button>
+                    </form>
+                </StyledModal>
             </StyledWrapper>
         </AuthenticatedLayout>
     );

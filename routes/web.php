@@ -17,6 +17,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\AnnouncementController;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Auth\OtpController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -37,7 +38,7 @@ Route::get('/dashboard', function () {
 })->middleware(['auth', 'verified', 'otp-verified'])->name('dashboard');
 
 Route::middleware([CheckRegistrationCompletion::class])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index']);
+    Route::get('/dashboard', [EventController::class, 'index'])->name('dashboard');
 });
 
 //Route::middleware(['auth'])->group(function () {
@@ -81,13 +82,23 @@ Route::middleware('auth')->group(function () {
     ->middleware(['auth', 'verified']);
 
       // Multi-step form routes
-      Route::get('/profile/form', [ProfileController::class, 'showForm'])->name('profile.form');
-      Route::post('/profile-step1', [ProfileController::class, 'postStep1'])->name('profile.step1');
-      Route::post('/profile-step2', [ProfileController::class, 'postStep2'])->name('profile.step2');
-      Route::post('/profile-step3', [ProfileController::class, 'postStep3'])->name('profile.step3');
-      Route::post('/profile-step4', [ProfileController::class, 'postStep4'])->name('profile.step4');
-      Route::post('/upload', [ProfileController::class, 'upload']);
+      Route::middleware(['auth', 'verified'])->group(function () {
+          Route::get('/profile/form', [ProfileController::class, 'showForm'])->name('profile.form');
+          Route::post('/profile-step1', [ProfileController::class, 'postStep1'])->name('profile.step1');
+          Route::post('/profile-step2', [ProfileController::class, 'postStep2'])->name('profile.step2');
+          Route::post('/profile-step3', [ProfileController::class, 'postStep3'])->name('profile.step3');
+          Route::post('/profile-step4', [ProfileController::class, 'postStep4'])->name('profile.step4');
+          Route::post('/upload', [ProfileController::class, 'upload']);
+      });
 
+      // Protected routes that require completed profile
+      Route::middleware(['auth', 'verified', 'profile.complete'])->group(function () {
+        Route::get('/dashboard', [EventController::class, 'index'])->name('dashboard');
+        Route::get('/ayudas', [AyudaController::class, 'index'])->name('ayuda.index');
+        Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+        Route::get('/help-center', function () {return Inertia::render('HelpCenter');})->name('help-center');
+          // All other protected routes...
+      });
 
       // Routes for ayuda
     Route::get('/ayudas', [AyudaController::class, 'index'])->name('ayuda.index');

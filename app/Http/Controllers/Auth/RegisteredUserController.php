@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\UserDevice;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -58,6 +59,15 @@ class RegisteredUserController extends Controller
             'phone_number' => $request->phone_number,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+        ]);
+
+        UserDevice::create([
+            'user_id' => $user->id,
+            'user_agent' => $request->header('User-Agent'),
+            'ip_address' => $request->ip(),
+            'is_verified' => true, // Device is trusted after email verification
+            'created_at' => now(),
+            'updated_at' => now()
         ]);
 
         // Trigger the Registered event to send the verification email

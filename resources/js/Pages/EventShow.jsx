@@ -19,7 +19,26 @@ import {
     ShareAltOutlined
 } from '@ant-design/icons';
 import { Typography } from 'antd';
+import styled from 'styled-components';
 const { Text } = Typography;
+
+const MobileActionBar = styled.div`
+    display: none;
+    @media (max-width: 992px) {
+        display: block;
+        margin: 16px 0;
+        padding: 16px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+`;
+
+const DesktopSidebar = styled(Card)`
+    @media (max-width: 992px) {
+        display: none;
+    }
+`;
 
 const EventShow = () => {
     const { 
@@ -284,7 +303,32 @@ const EventShow = () => {
             </div>
 
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Row gutter={24}>
+                {/* Mobile Action Bar */}
+                <MobileActionBar>
+                    <Space direction="vertical" className="w-full">
+                        {renderActionButton()}
+                        <Statistic
+                            title="Available Slots"
+                            value={event.available_slots}
+                            suffix={`/ ${event.slots}`}
+                            prefix={<TeamOutlined />}
+                        />
+                        {joined && (
+                            <Alert
+                                message="Registration Status"
+                                description={
+                                    attendance_status === "present" 
+                                        ? "You have attended this event" 
+                                        : "You are registered for this event"
+                                }
+                                type={attendance_status === "present" ? "success" : "info"}
+                                showIcon
+                            />
+                        )}
+                    </Space>
+                </MobileActionBar>
+
+                <Row gutter={[24, 24]}>
                     {/* Main Content */}
                     <Col xs={24} lg={16}>
                         {renderEventProgress()}
@@ -345,9 +389,9 @@ const EventShow = () => {
                         )}
                     </Col>
 
-                    {/* Sidebar */}
+                    {/* Desktop Sidebar */}
                     <Col xs={24} lg={8}>
-                        <Card className="sticky top-4">
+                        <DesktopSidebar className="sticky top-4">
                             <Space direction="vertical" className="w-full">
                                 {renderActionButton()}
                                 
@@ -416,7 +460,7 @@ const EventShow = () => {
                                     </Space>
                                 </div>
                             </Space>
-                        </Card>
+                        </DesktopSidebar>
                     </Col>
                 </Row>
             </div>

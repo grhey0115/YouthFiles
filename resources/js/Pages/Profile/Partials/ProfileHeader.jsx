@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Avatar, Card, Button, Upload, message, Tooltip } from 'antd';
-import { UserOutlined, CheckCircleFilled, CameraOutlined } from '@ant-design/icons';
+import { UserOutlined, CheckCircleFilled, CameraOutlined, MailOutlined } from '@ant-design/icons';
 import axios from 'axios';
+import { Link } from '@inertiajs/react';
 
 export default function ProfileHeader({ user }) {
   const [avatarUrl, setAvatarUrl] = useState(
@@ -80,22 +81,43 @@ export default function ProfileHeader({ user }) {
             </Tooltip>
           </Upload>
         </div>
-        <div className="ml-4 flex flex-col">
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold mr-2">
-              {user?.first_name} {user?.last_name}
-            </h1>
-            {user.account_status === 'verified' && (
-              <CheckCircleFilled 
-                style={{ 
-                  color: 'yellow', // Facebook blue
-                  fontSize: '16px' 
-                }} 
-              />
+        <div className="ml-4 flex flex-col flex-grow">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <h1 className="text-xl font-semibold mr-2">
+                {user?.first_name} {user?.last_name}
+              </h1>
+              {user.account_status === 'verified' && (
+                <CheckCircleFilled 
+                  style={{ 
+                    color: 'yellow',
+                    fontSize: '16px' 
+                  }} 
+                />
+              )}
+            </div>
+            {!user.email_verified_at && (
+              <Link href={route('verification.notice')} className="ml-auto">
+                <Button 
+                  type="primary" 
+                  icon={<MailOutlined />}
+                  className="bg-yellow-500 hover:bg-yellow-600 border-none text-white flex items-center"
+                >
+                  Verify Email
+                </Button>
+              </Link>
             )}
           </div>
           <p className="text-gray-200">
             {user?.email}
+            {user.email_verified_at && (
+              <Tooltip title="Email Verified">
+                <CheckCircleFilled 
+                  className="ml-2" 
+                  style={{ color: 'lightgreen' }} 
+                />
+              </Tooltip>
+            )}
           </p>
         </div>
       </Card>

@@ -219,7 +219,7 @@ const ShareButtons = ({ event }) => {
     }
   };
 
-
+ 
 
   const handleVolunteer = () => {
     if (!selectedOpportunity) {

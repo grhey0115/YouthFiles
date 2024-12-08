@@ -14,17 +14,29 @@ class VerifyEmailController extends Controller
      */
     public function __invoke(EmailVerificationRequest $request): RedirectResponse
     {
-        // If the user's email is already verified, redirect to profile form with a "verified" flag
-        if ($request->user()->hasVerifiedEmail()) {
-            return redirect()->intended(route('Dashboard').'?verified=1');
+        $user = $request->user();
+
+        // If email is already verified
+        if ($user->hasVerifiedEmail()) {
+            // If user has completed profile, go to dashboard
+            if ($user->profile_completed) {
+                return redirect()->intended(route('dashboard').'?verified=1');
+            }
+            // If profile not completed, go to profile form
+            return redirect()->route('profile.form', ['verified' => 1]);
         }
 
-        // If this is the first time verifying the email, mark as verified and trigger the event
-        if ($request->user()->markEmailAsVerified()) {
-            event(new Verified($request->user()));
+        // First time verifying email
+        if ($user->markEmailAsVerified()) {
+            event(new Verified($user));
         }
 
-        // After email verification, redirect to the profile form
-        return redirect()->intended(route('profile.form').'?verified=1');
+        // After verification, check profile completion
+        if ($user->profile_completed) {
+            return redirect()->intended(route('dashboard').'?verified=1');
+        }
+
+        // Redirect to profile form if profile not completed
+        return redirect()->route('profile.form', ['verified' => 1]);
     }
 }

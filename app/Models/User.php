@@ -9,12 +9,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
+use Filament\Models\Contracts\HasName;
 use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Afsakar\FilamentOtpLogin\Models\Contracts\CanLoginDirectly;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Support\Facades\Storage;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail, CanLoginDirectly
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, CanLoginDirectly, HasName
 {
     use HasFactory, Notifiable, HasRoles, HasPanelShield;
 
@@ -44,6 +45,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
         'verification_steps',
         'verified_at',
         'rejection_reason',
+        'profile_completed',
     ];
 
     /**
@@ -61,15 +63,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
      *
      * @return array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'verified_at' => 'datetime',
-            'verification_steps' => 'array',
-        ];
-    }
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'verified_at' => 'datetime',
+        'verification_steps' => 'array',
+        'profile_completed' => 'boolean',
+    ];
     public function isVerified(): bool
     {
         return $this->account_status === self::STATUS_VERIFIED;
@@ -164,6 +164,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
     public function donations()
     {
         return $this->hasMany(UserDonation::class);
+    }
+    public function getFilamentName(): string
+    {
+        return "{$this->first_name} {$this->last_name}";
     }
 
     public function volunteerApplications()

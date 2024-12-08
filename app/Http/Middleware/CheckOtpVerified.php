@@ -1,7 +1,5 @@
 <?php
 
-// app/Http/Middleware/CheckOtpVerified.php
-
 namespace App\Http\Middleware;
 
 use Closure;
@@ -25,8 +23,12 @@ class CheckOtpVerified
 
             // If the user's OTP is not verified, redirect to the OTP verification page
             if (!$user->otp_verified) {
-                return redirect()->route('otp.verify');
+                return redirect()->route('otp.verify')
+                    ->with('error', 'Please verify your OTP to access this page.');
             }
+        } else {
+            // Redirect unauthenticated users to the login page
+            return redirect()->route('login')->with('error', 'You must log in first.');
         }
 
         return $next($request);

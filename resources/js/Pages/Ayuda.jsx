@@ -128,14 +128,7 @@ const Ayuda = () => {
                     >
                         <Button icon={<ShareAltOutlined />}>Share</Button>
                     </Popover>,
-                    <Popover
-                        content={renderRequirements(ayuda)}
-                        title="Requirements"
-                        trigger="click"
-                        placement="bottom"
-                    >
-                        <Button icon={<FileTextOutlined />}>Requirements</Button>
-                    </Popover>
+                   
                 ]}
             >
                 <Card.Meta

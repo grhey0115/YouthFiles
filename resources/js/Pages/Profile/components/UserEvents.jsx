@@ -53,7 +53,7 @@ export default function UserEvents({ userEvents, isLoadingEvents }) {
                 <div className="relative h-48">
                   <img
                     alt={event.name}
-                    src={event.header_image || '/default-event-image.jpg'}
+                    src={`/storage/${event.header_image}`}
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-2 right-2">

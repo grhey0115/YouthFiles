@@ -15,9 +15,13 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
+            
         ]);
 
-        //
+        $middleware->alias([
+            'otp_verified' => \App\Http\Middleware\EnsureOtpIsVerified::class,
+            'profile.complete' => \App\Http\Middleware\EnsureProfileIsComplete::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

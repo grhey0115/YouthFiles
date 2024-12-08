@@ -2,8 +2,9 @@
 
 import React, { useState, useRef } from 'react';
 import { useForm } from '@inertiajs/react';
-import { Row, Col, Input, Button, Form, Typography, Space } from 'antd';
+import { Row, Col, Input, Button, Form, Typography, Space, message } from 'antd';
 import { LockOutlined } from '@ant-design/icons';
+import axios from 'axios';
 
 const { Title, Text, Link } = Typography;
 
@@ -13,9 +14,10 @@ export default function OtpVerify() {
     });
 
     const [otp, setOtp] = useState(new Array(6).fill(""));
-    const [resendCooldown, setResendCooldown] = useState(false);  // State to manage cooldown for resend button
-    const [countdown, setCountdown] = useState(30);  // Countdown for resend button
+    const [resendCooldown, setResendCooldown] = useState(false);
+    const [countdown, setCountdown] = useState(30);
     const inputRefs = useRef([]);
+    const [isResending, setIsResending] = useState(false);
 
     // Handle input change for OTP fields
     const handleChange = (element, index) => {
@@ -44,26 +46,38 @@ export default function OtpVerify() {
     };
 
     // Handle Resend OTP
-    const handleResendOtp = () => {
-        if (!resendCooldown) {
-            // Trigger resend OTP request
-            post(route('otp.resend'));
-
-            // Set resend button cooldown to 30 seconds
+    const handleResendOtp = async () => {
+        try {
+            setIsResending(true);
+            // Use route helper instead of hardcoded URL
+            const response = await axios.post(route('otp.resend'), {}, {
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                }
+            });
+            
+            message.success('OTP has been resent to your device');
+            
+            // Start cooldown
             setResendCooldown(true);
-            setCountdown(30);
-
-            // Start countdown timer
+            let timeLeft = 30;
+            
             const timer = setInterval(() => {
-                setCountdown((prev) => {
-                    if (prev === 1) {
-                        clearInterval(timer);
-                        setResendCooldown(false);
-                        return 30;  // Reset countdown
-                    }
-                    return prev - 1;
-                });
+                timeLeft -= 1;
+                setCountdown(timeLeft);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    setResendCooldown(false);
+                    setCountdown(30);
+                }
             }, 1000);
+            
+        } catch (error) {
+            console.error('Resend Error:', error);
+            message.error('Failed to resend OTP. Please try again.');
+        } finally {
+            setIsResending(false);
         }
     };
 
@@ -112,11 +126,16 @@ export default function OtpVerify() {
 
                 <div style={{ textAlign: 'center', marginTop: '20px' }}>
                     <Text type="secondary">
-                        Didn’t receive the code?{' '}
+                        Didn't receive the code?{' '}
                         {resendCooldown ? (
                             <span>Resend available in {countdown} seconds</span>
                         ) : (
-                            <Link onClick={handleResendOtp}>Send again</Link>
+                            <Link 
+                                onClick={handleResendOtp} 
+                                disabled={isResending || resendCooldown}
+                            >
+                                {isResending ? 'Resending...' : 'Send again'}
+                            </Link>
                         )}
                     </Text>
                 </div>

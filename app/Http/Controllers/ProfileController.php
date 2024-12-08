@@ -172,6 +172,8 @@ class ProfileController extends Controller
             ])
         );
 
+        $request->user()->update(['profile_completed' => true]);
+
         return Redirect::route('dashboard');
     }
 

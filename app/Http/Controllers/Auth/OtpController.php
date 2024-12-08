@@ -6,12 +6,67 @@ use App\Http\Controllers\Controller;
 use App\Models\UserDevice;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use App\Notifications\OtpNotification;
 
 class OtpController extends Controller
 {
+    protected function generateAndSendOtp($user)
+    {
+        try {
+            // Generate OTP
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            
+            // Save OTP to device record
+            UserDevice::updateOrCreate(
+                [
+                    'user_id' => $user->id,
+                    'user_agent' => request()->header('User-Agent'),
+                    'ip_address' => request()->ip(),
+                ],
+                [
+                    'otp' => $otp,
+                    'otp_expires_at' => now()->addMinutes(5),
+                    'last_otp_sent_at' => now(),
+                ]
+            );
 
+            // Send OTP notification immediately
+            $user->notify(new OtpNotification($otp));
+            
+            Log::info('OTP sent successfully to user: ' . $user->id . ' at email: ' . $user->email);
+            
+            return true;
+        } catch (\Exception $e) {
+            Log::error('Failed to send OTP: ' . $e->getMessage());
+            throw $e;
+        }
+    }
 
+    public function resend(Request $request)
+    {
+        try {
+            $user = $request->user();
+            
+            // Check for rate limiting
+            if ($this->isRateLimited($user)) {
+                return response()->json([
+                    'error' => 'Please wait before requesting another OTP.'
+                ], 429);
+            }
 
+            $this->generateAndSendOtp($user);
+
+            return response()->json([
+                'message' => 'OTP has been sent successfully to your email'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('OTP Resend Error: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Failed to send OTP. Please try again.'
+            ], 500);
+        }
+    }
 
     public function show()
     {
@@ -47,6 +102,7 @@ class OtpController extends Controller
         // Allow the user to proceed
         $request->session()->regenerate();
 
+        session(['otp_verified' => true]);
         return redirect()->intended('dashboard');
     }
 }

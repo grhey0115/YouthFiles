@@ -65,7 +65,7 @@ const MultiStepForm = ({
      'civil_status',  
      'gender',   
      'siblings', 
-     'current_status', 
+    
      
     ];  
     
@@ -151,57 +151,61 @@ const MultiStepForm = ({
       'relationship',  
       'contact_number',  
       'address',  
-     ];  
+    ];  
 
-     const emptyFields = requiredFields.filter((field) => !data[field]);  
+    const emptyFields = requiredFields.filter((field) => !data[field]);  
   
-  if (emptyFields.length > 0) {  
-   message.error(`Please fill in the following required fields: ${emptyFields.join(', ')}`);  
-   return;  
-  }  
+    if (emptyFields.length > 0) {  
+      message.error(`Please fill in the following required fields: ${emptyFields.join(', ')}`);  
+      return;  
+    }  
   
-  // Validate name  
-  const nameRegex = /^[a-zA-Z\s]+$/;  
-  if (!nameRegex.test(data.name)) {  
-   message.error('Please enter a valid name (letters and spaces only)');  
-   return;  
-  }  
+    // Validate name  
+    const nameRegex = /^[a-zA-Z\s]+$/;  
+    if (!nameRegex.test(data.name)) {  
+      message.error('Please enter a valid name (letters and spaces only)');  
+      return;  
+    }  
   
-  // Validate relationship  
-  const relationshipRegex = /^[a-zA-Z\s]+$/;  
-  if (!relationshipRegex.test(data.relationship)) {  
-   message.error('Please enter a valid relationship (letters and spaces only)');  
-   return;  
-  }  
+    // Validate relationship  
+    const relationshipRegex = /^[a-zA-Z\s]+$/;  
+    if (!relationshipRegex.test(data.relationship)) {  
+      message.error('Please enter a valid relationship (letters and spaces only)');  
+      return;  
+    }  
   
-  // Validate contact number  
-  const contactNumberRegex = /^\d{11}$/;  
-  if (!contactNumberRegex.test(data.contact_number)) {  
-   message.error('Please enter a valid contact number (11 digits)');  
-   return;  
-  }  
+    // Validate contact number  
+    const contactNumberRegex = /^\d{11}$/;  
+    if (!contactNumberRegex.test(data.contact_number)) {  
+      message.error('Please enter a valid contact number (11 digits)');  
+      return;  
+    }  
   
-  // Validate address  
-  const addressRegex = /^[a-zA-Z0-9\s,.-]+$/;  
-  if (!addressRegex.test(data.address)) {  
-   message.error('Please enter a valid address (letters, numbers, spaces, commas, periods, and hyphens only)');  
-   return;  
-  }  
-
-    
+    // Validate address  
+    const addressRegex = /^[a-zA-Z0-9\s,.-]+$/;  
+    if (!addressRegex.test(data.address)) {  
+      message.error('Please enter a valid address (letters, numbers, spaces, commas, periods, and hyphens only)');  
+      return;  
+    }  
 
     const formData = new FormData();
-     // Append all form data
-     Object.keys(data).forEach((key) => {
-        formData.append(key, data[key]);
-      });
-      // Append files if they exist
+    // Append all form data
+    Object.keys(data).forEach((key) => {
+      formData.append(key, data[key]);
+    });
+    
+    // Append files if they exist
     if (uploadedFiles.front_id) {
-        formData.append('front_id', uploadedFiles.front_id);
-      }
-      if (uploadedFiles.back_id) {
-        formData.append('back_id', uploadedFiles.back_id);
-      }
+      formData.append('front_id', uploadedFiles.front_id);
+    }
+    if (uploadedFiles.back_id) {
+      formData.append('back_id', uploadedFiles.back_id);
+    }
+
+    // Add profile_completed flag on final step
+    if (currentStep === 4) {
+      formData.append('profile_completed', true);
+    }
 
     post(stepRoutes[currentStep - 1], formData, {
       headers: {
@@ -211,11 +215,15 @@ const MultiStepForm = ({
         if (currentStep < 4) {
           nextStep();
         } else {
-          Inertia.visit(route('profile.view'));
+          // Show success message before redirecting
+          message.success('Profile completed successfully!', 2, () => {
+            Inertia.visit(route('dashboard'));
+          });
         }
       },
       onError: (errors) => {
         console.error('Submission Error:', errors);
+        message.error('Failed to save profile information. Please try again.');
       },
     });
   };
@@ -272,13 +280,26 @@ const MultiStepForm = ({
 
   return (  
     <div className="flex flex-col md:flex-row h-screen">  
-     <StepNavigation  
-       currentStep={currentStep}  
-       goToStep={goToStep}  
-     />  
+      <StepNavigation  
+        currentStep={currentStep}  
+        goToStep={goToStep}  
+      />  
       <div className="w-full max-w-4xl mx-auto mt-8 px-4 md:px-8">  
-       {renderStep()}  
-     </div>  
+        {/* Add progress indicator */}
+        <div className="mb-6">
+          <div className="text-sm text-gray-600 mb-2">
+            Profile Completion Progress
+          </div>
+          <div className="w-full bg-gray-200 rounded-full h-2.5">
+            <div 
+              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              style={{ width: `${(currentStep / 4) * 100}%` }}
+            ></div>
+          </div>
+        </div>
+        
+        {renderStep()}
+      </div>  
     </div>  
   );
 };

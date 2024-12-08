@@ -65,6 +65,10 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
                 
             ])
+
+            ->unsavedChangesAlerts()
+            ->databaseTransactions()
+
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 \Hasnayeen\Themes\ThemesPlugin::make(),
@@ -76,11 +80,12 @@ class AdminPanelProvider extends PanelProvider
                SpotlightPlugin::make(),
                GlobalSearchModalPlugin::make(),
                \BezhanSalleh\FilamentGoogleAnalytics\FilamentGoogleAnalyticsPlugin::make(),
+               \DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make(),
              
             ])
 
             ->databaseNotifications()
-            ->spa()
+       
 
             ->navigationGroups([
                 'User Management',
@@ -102,6 +107,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Youthfiles - Admin ')
 
             ->favicon(asset('logo11.png'))
+            
 
             ->resources([
                 config('filament-logger.activity_resource')

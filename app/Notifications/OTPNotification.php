@@ -2,45 +2,31 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class OTPNotification extends Notification
+class OtpNotification extends Notification
 {
-    use Queueable;
+    protected $otp;
 
-    protected $otp;  // Declare OTP property
-
-    /**
-     * Create a new notification instance.
-     *
-     * @param string $otp
-     */
     public function __construct($otp)
     {
-        $this->otp = $otp;  // Assign the passed OTP to the class property
+        $this->otp = $otp;
     }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
+    public function via($notifiable)
     {
         return ['mail'];
     }
 
-    /**
-     * Get the mail representation of the notification.
-     */
-    public function toMail(object $notifiable): MailMessage
+    public function toMail($notifiable)
     {
         return (new MailMessage)
-                ->subject('Your One-Time Password (OTP)')
-                ->line('Your One-Time Password (OTP) is: ' . $this->otp)
-                ->line('This OTP will expire in 10 minutes.');
+            ->subject('Your OTP Verification Code')
+            ->greeting('Hello!')
+            ->line('Your OTP verification code is:')
+            ->line($this->otp)
+            ->line('This code will expire in 5 minutes.')
+            ->line('If you did not request this code, please ignore this email.');
     }
 }
