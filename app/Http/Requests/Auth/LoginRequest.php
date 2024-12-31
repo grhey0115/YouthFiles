@@ -39,13 +39,19 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
-        $this->ensureIsNotRateLimited();
-
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Check user approval status after successful authentication
+        if (Auth::user()->approval_status === 'rejected') {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been rejected. Please contact support for more information.'],
             ]);
         }
 

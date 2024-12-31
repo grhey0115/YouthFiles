@@ -1,9 +1,26 @@
+import { useEffect } from 'react';
 import GuestLayout from '@/Layouts/GuestLayout';
 import PrimaryButton from '@/Components/PrimaryButton';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, router } from '@inertiajs/react';
 
 export default function VerifyEmail({ status }) {
     const { post, processing } = useForm({});
+
+    useEffect(() => {
+        // Check verification status every 3 seconds
+        const interval = setInterval(() => {
+            // Make a request to check if user is verified
+            fetch('/api/check-verification-status')  // You'll need to create this endpoint
+                .then(response => response.json())
+                .then(data => {
+                    if (data.verified) {
+                        window.location.reload(); // This will trigger Laravel's middleware to handle the redirect
+                    }
+                });
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, []);
 
     const submit = (e) => {
         e.preventDefault();

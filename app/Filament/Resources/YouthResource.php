@@ -46,6 +46,11 @@ class YouthResource extends Resource
                     ->label('Phone Number'),
                 Forms\Components\TextInput::make('email')
                     ->label('Email'),
+
+                    Forms\Components\CheckboxList::make('roles')
+                    ->label('Roles')
+                    ->relationship('roles', 'name')
+                    ->columns(2),
                   
             ]);
     }
@@ -116,6 +121,7 @@ class YouthResource extends Resource
                 ->label('Verified'),
             ])
             ->actions([
+                Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
                 ExportAction::make(),
                 

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useForm } from '@inertiajs/react';
-import Inertia from '@inertiajs/inertia';
 import { message } from 'antd';  
 import { FaUser, FaGraduationCap, FaInfoCircle, FaAddressBook } from 'react-icons/fa';
 
@@ -18,7 +17,6 @@ const MultiStepForm = ({
   emergencyContact 
 }) => {
   const [currentStep, setCurrentStep] = useState(1);
-  const [files, setFiles] = useState([]);
   const [uploadedFiles, setUploadedFiles] = useState({
     front_id: null,
     back_id: null
@@ -46,7 +44,7 @@ const MultiStepForm = ({
     is_pwd: additionalInformation?.is_pwd || '0', 
     has_conflict_with_law: additionalInformation?.has_conflict_with_law || '0', 
     is_indigenous: additionalInformation?.is_indigenous || '0', 
-    is_registered_voter: additionalInformation?.is_registered_voter || '0', 
+    is_registered_voter: additionalInformation?.is_registered_voter || '1', 
     attended_assembly: additionalInformation?.attended_assembly || '1', 
     why_no_assembly: additionalInformation?.why_no_assembly || '',
     residency_status: additionalInformation?.residency_status || 'Permanent',
@@ -58,51 +56,10 @@ const MultiStepForm = ({
 
   const handleNextStep = (e) => {  
     e.preventDefault();  
-    const requiredFields = [  
-     'barangay',  
-     'sitio',  
-     'date_of_birth',  
-     'civil_status',  
-     'gender',   
-     'siblings', 
-    
-     
-    ];  
-    
-    const emptyFields = requiredFields.filter((field) => !data[field]);  
-    
-    if (emptyFields.length > 0) {  
-     message.error(`Please fill in the following required fields: ${emptyFields.join(', ')}`);  
-     return;  
-    }  
-    
-    // Check if date of birth is valid  
-    const dateOfBirth = new Date(data.date_of_birth);  
-    if (isNaN(dateOfBirth.getTime())) {  
-     message.error('Please enter a valid date of birth');  
-     return;  
-    }  
-    
-    // Check if age is valid  
-    if (data.age <= 0) {  
-     message.error('Please enter a valid age');  
-     return;  
-    }  
-    
-    // Check if family members and siblings are valid numbers  
-    if (data.family_members < 0 || data.siblings < 0) {  
-     message.error('Please enter a valid number of family members and siblings');  
-     return;  
-    }  
-    
-    
-    // If all validations pass, proceed to the next step  
     handleSubmit(e);  
     nextStep();  
   };
-  
 
-  // Shared methods
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setData({
@@ -110,7 +67,6 @@ const MultiStepForm = ({
       [name]: type === 'checkbox' ? checked : value,
     });
 
-    // Age calculation logic
     if (name === 'date_of_birth') {
       const calculateAge = (dob) => {
         const diff = new Date() - new Date(dob);
@@ -137,6 +93,13 @@ const MultiStepForm = ({
     }));
   };
 
+  const handleTagChange = (newTags) => {
+    setData(prevData => ({
+      ...prevData,
+      hobbies: newTags
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     const stepRoutes = [
@@ -146,63 +109,20 @@ const MultiStepForm = ({
       '/profile-step4',
     ];
 
-    const requiredFields = [  
-      'name',  
-      'relationship',  
-      'contact_number',  
-      'address',  
-    ];  
-
-    const emptyFields = requiredFields.filter((field) => !data[field]);  
-  
-    if (emptyFields.length > 0) {  
-      message.error(`Please fill in the following required fields: ${emptyFields.join(', ')}`);  
-      return;  
-    }  
-  
-    // Validate name  
-    const nameRegex = /^[a-zA-Z\s]+$/;  
-    if (!nameRegex.test(data.name)) {  
-      message.error('Please enter a valid name (letters and spaces only)');  
-      return;  
-    }  
-  
-    // Validate relationship  
-    const relationshipRegex = /^[a-zA-Z\s]+$/;  
-    if (!relationshipRegex.test(data.relationship)) {  
-      message.error('Please enter a valid relationship (letters and spaces only)');  
-      return;  
-    }  
-  
-    // Validate contact number  
-    const contactNumberRegex = /^\d{11}$/;  
-    if (!contactNumberRegex.test(data.contact_number)) {  
-      message.error('Please enter a valid contact number (11 digits)');  
-      return;  
-    }  
-  
-    // Validate address  
-    const addressRegex = /^[a-zA-Z0-9\s,.-]+$/;  
-    if (!addressRegex.test(data.address)) {  
-      message.error('Please enter a valid address (letters, numbers, spaces, commas, periods, and hyphens only)');  
-      return;  
-    }  
-
     const formData = new FormData();
-    // Append all form data
     Object.keys(data).forEach((key) => {
       formData.append(key, data[key]);
     });
-    
-    // Append files if they exist
-    if (uploadedFiles.front_id) {
-      formData.append('front_id', uploadedFiles.front_id);
-    }
-    if (uploadedFiles.back_id) {
-      formData.append('back_id', uploadedFiles.back_id);
-    }
 
-    // Add profile_completed flag on final step
+    Object.keys(data).forEach((key) => {
+      if (Array.isArray(data[key])) {
+        // For arrays like hobbies, join them into a string or JSON stringify them
+        formData.append(key, JSON.stringify(data[key]));
+      } else {
+        formData.append(key, data[key]);
+      }
+    });
+
     if (currentStep === 4) {
       formData.append('profile_completed', true);
     }
@@ -215,9 +135,8 @@ const MultiStepForm = ({
         if (currentStep < 4) {
           nextStep();
         } else {
-          // Show success message before redirecting
-          message.success('Profile completed successfully!', 2, () => {
-            Inertia.visit(route('dashboard'));
+          message.success('Profile submitted successfully!', 2, () => {
+            window.location.href = route('pending-approval');
           });
         }
       },
@@ -240,8 +159,8 @@ const MultiStepForm = ({
             data={data}
             handleChange={handleChange}
             files={uploadedFiles}
-        handleFileChange={handleFileChange}
-         handleRemoveFile={handleRemoveFile}
+            handleFileChange={handleFileChange}
+            handleRemoveFile={handleRemoveFile}
             handleNextStep={handleNextStep}
           />
         );
@@ -259,6 +178,7 @@ const MultiStepForm = ({
           <AdditionalInformationStep 
             data={data}
             handleChange={handleChange}
+            handleTagChange={handleTagChange}
             handleNextStep={handleNextStep}
             prevStep={prevStep}
           />
@@ -285,7 +205,6 @@ const MultiStepForm = ({
         goToStep={goToStep}  
       />  
       <div className="w-full max-w-4xl mx-auto mt-8 px-4 md:px-8">  
-        {/* Add progress indicator */}
         <div className="mb-6">
           <div className="text-sm text-gray-600 mb-2">
             Profile Completion Progress
@@ -297,7 +216,6 @@ const MultiStepForm = ({
             ></div>
           </div>
         </div>
-        
         {renderStep()}
       </div>  
     </div>  

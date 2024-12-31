@@ -1,5 +1,5 @@
 import React from 'react';
-import { Tabs, Card, Badge, Button, Tooltip, Empty } from 'antd';
+import { Tabs, Card, Badge, Button, Tooltip, Empty, Divider } from 'antd';
 import { 
   UserOutlined, 
   CalendarOutlined, 
@@ -11,6 +11,13 @@ import {
   EditOutlined,
   DeleteOutlined
 } from '@ant-design/icons';
+import { 
+  UserCircle, 
+  KeyRound, 
+  AlertTriangle,
+  Mail,
+  Shield
+} from 'lucide-react';
 import ProfileInfo from '../components/ProfileInfo';
 import UserEvents from '../components/UserEvents';
 import UserPoints from '../components/UserPoints';
@@ -135,52 +142,81 @@ export default function ProfileTabs({
       ),
       children: (
         <div className="py-6">
-          <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
-            {/* Profile Information */}
-            <Card 
-              title={
-                <span className="flex items-center gap-2">
-                  <EditOutlined />
-                  Profile Information
-                </span>
-              }
-              bordered={false}
-              className="shadow-sm hover:shadow-md transition-all"
-            >
-              <UpdateProfileInformationForm
-                mustVerifyEmail={mustVerifyEmail}
-                status={status}
-                className="max-w-xl"
-              />
-            </Card>
+      <div className="max-w-4xl mx-auto space-y-6">
+        {status && (
+          <Alert className="mb-6">
+            <AlertDescription>{status}</AlertDescription>
+          </Alert>
+        )}
 
-            {/* Password Update */}
-            <Card 
-              title={
-                <span className="flex items-center gap-2">
-                  <TeamOutlined />
-                  Update Password
+        {/* Profile Information Section */}
+        <Card 
+          title={
+            <div className="flex items-center gap-3">
+              <UserCircle className="h-5 w-5 text-blue-500" />
+              <div>
+                <h3 className="text-lg font-semibold">Profile Information</h3>
+                <p className="text-sm text-gray-500 font-normal">
+                  Update your account's profile information and email address
+                </p>
+              </div>
+            </div>
+          }
+          className="shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <UpdateProfileInformationForm
+            mustVerifyEmail={mustVerifyEmail}
+            status={status}
+            className="max-w-xl"
+          />
+          
+          {mustVerifyEmail && (
+            <div className="mt-4 pt-4 border-t">
+              <div className="flex items-center gap-2 text-amber-600">
+                <Mail className="h-5 w-5" />
+                <span className="text-sm">
+                  Your email address is unverified
                 </span>
-              }
-              bordered={false}
-              className="shadow-sm hover:shadow-md transition-all"
-            >
-              <UpdatePasswordForm className="max-w-xl" />
-            </Card>
+              </div>
+            </div>
+          )}
+        </Card>
 
-            {/* Delete Account */}
-            <Card 
-              title={
-                <span className="flex items-center gap-2 text-red-500">
-                  <DeleteOutlined />
-                  Delete Account
-                </span>
-              }
-              bordered={false}
-              className="shadow-sm hover:shadow-md transition-all"
-            >
-              <DeleteUserForm className="max-w-xl" />
-            </Card>
+        {/* Security Section */}
+        <Card 
+          title={
+            <div className="flex items-center gap-3">
+              <Shield className="h-5 w-5 text-green-500" />
+              <div>
+                <h3 className="text-lg font-semibold">Security</h3>
+                <p className="text-sm text-gray-500 font-normal">
+                  Ensure your account stays secure by updating your password regularly
+                </p>
+              </div>
+            </div>
+          }
+          className="shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <UpdatePasswordForm className="max-w-xl" />
+        </Card>
+
+        {/* Danger Zone */}
+        <Card 
+          title={
+            <div className="flex items-center gap-3">
+              <AlertTriangle className="h-5 w-5 text-red-500" />
+              <div>
+                <h3 className="text-lg font-semibold text-red-500">Danger Zone</h3>
+                <p className="text-sm text-gray-500 font-normal">
+                  Once you delete your account, there is no going back. Please be certain.
+                </p>
+              </div>
+            </div>
+          }
+          className="border-red-100 shadow-sm hover:shadow-md transition-all duration-200"
+        >
+          <DeleteUserForm className="max-w-xl" />
+        </Card>
           </div>
         </div>
       )

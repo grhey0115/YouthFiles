@@ -69,13 +69,11 @@ export default function Welcome({ auth }) {
                                 SK Barangay Casay
                             </h1>
                         </div>
-
-                        {/* Desktop Navigation */}
-                        <div className="hidden md:flex items-center space-x-4">
+                        <div className="flex items-center space-x-2 md:space-x-4">
                             {auth.user ? (
                                 <Link 
                                     href={route('dashboard')}
-                                    className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-colors duration-300"
+                                    className="bg-red-500 text-white px-4 md:px-6 py-2 rounded-full hover:bg-red-600 transition-colors duration-300 text-sm md:text-base"
                                 >
                                     Dashboard
                                 </Link>
@@ -83,70 +81,21 @@ export default function Welcome({ auth }) {
                                 <>
                                     <Link 
                                         href={route('login')}
-                                        className="text-gray-600 hover:text-red-500 transition-colors duration-300"
+                                        className="text-gray-600 hover:text-red-500 transition-colors duration-300 text-sm md:text-base whitespace-nowrap"
                                     >
                                         Login
                                     </Link>
                                     <Link 
                                         href={route('register')}
-                                        className="bg-red-500 text-white px-6 py-2 rounded-full hover:bg-red-600 transition-colors duration-300"
+                                        className="bg-red-500 text-white px-3 md:px-6 py-2 rounded-full hover:bg-red-600 transition-colors duration-300 text-sm md:text-base whitespace-nowrap"
                                     >
                                         Join Now
                                     </Link>
                                 </>
                             )}
                         </div>
-
-                        {/* Mobile Menu Button */}
-                        <button 
-                            className="md:hidden"
-                            onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        >
-                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path 
-                                    strokeLinecap="round" 
-                                    strokeLinejoin="round" 
-                                    strokeWidth={2} 
-                                    d={isMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} 
-                                />
-                            </svg>
-                        </button>
                     </div>
                 </div>
-
-                {/* Mobile Menu */}
-                {isMenuOpen && (
-                    <motion.div 
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        className="md:hidden bg-white shadow-lg rounded-lg mx-4 mt-2 p-4"
-                    >
-                        {auth.user ? (
-                            <Link 
-                                href={route('dashboard')}
-                                className="block text-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600"
-                            >
-                                Dashboard
-                            </Link>
-                        ) : (
-                            <>
-                                <Link 
-                                    href={route('login')}
-                                    className="block text-center text-gray-600 hover:text-red-500 mb-2"
-                                >
-                                    Login
-                                </Link>
-                                <Link 
-                                    href={route('register')}
-                                    className="block text-center bg-red-500 text-white px-4 py-2 rounded-full hover:bg-red-600"
-                                >
-                                    Join Now
-                                </Link>
-                            </>
-                        )}
-                    </motion.div>
-                )}
             </nav>
 
             {/* Hero Section */}

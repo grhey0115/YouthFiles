@@ -100,12 +100,22 @@ const StyledPaginationContainer = styled.div`
 const Dashboard = () => {
   const { auth, events } = usePage().props;
   const [activeTab, setActiveTab] = useState("upcoming");
-  const [upcomingPage, setUpcomingPage] = useState(1);
-  const [pastPage, setPastPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
 
   const handleTabChange = (key) => {
     setActiveTab(key);
+    setCurrentPage(1);
+  };
+
+  const handlePaginationChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const getPaginatedData = (data) => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return data.slice(startIndex, endIndex);
   };
 
   const filterEvents = (status) => {
@@ -126,12 +136,6 @@ const Dashboard = () => {
     }
 
     return [];
-  };
-
-  const paginateEvents = (filteredEvents, currentPage) => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredEvents.slice(startIndex, endIndex);
   };
 
   const renderEventCard = (event) => (
@@ -177,14 +181,6 @@ const Dashboard = () => {
     </Badge.Ribbon>
   );
 
-  const renderEvents = (filteredEvents) => {
-    return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-        {filteredEvents.map(renderEventCard)}
-      </div>
-    );
-  };
-
   const upcomingEvents = filterEvents("upcoming");
   const pastEvents = filterEvents("past");
 
@@ -193,46 +189,58 @@ const Dashboard = () => {
       <AuthenticatedLayout user={auth}>
         <Head title="Dashboard" />
 
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: "16px" }}>
-          <Tabs
-            defaultActiveKey="upcoming"
-            activeKey={activeTab}
-            onChange={handleTabChange}
-            centered
-            items={[
-              {
-                key: "upcoming",
-                label: `Upcoming Events (${upcomingEvents.length})`,
-                children: renderEvents(paginateEvents(upcomingEvents, upcomingPage)),
-              },
-              {
-                key: "past",
-                label: `Past Events (${pastEvents.length})`,
-                children: renderEvents(paginateEvents(pastEvents, pastPage)),
-              },
-            ]}
-          />
+        <div className="container mx-auto py-6">
+          <Card className="mb-6">
+            <Tabs
+              defaultActiveKey="upcoming"
+              activeKey={activeTab}
+              onChange={handleTabChange}
+              centered
+              items={[
+                {
+                  key: "upcoming",
+                  label: `Upcoming Events (${upcomingEvents.length})`,
+                  children: (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {getPaginatedData(upcomingEvents).map(renderEventCard)}
+                      </div>
+                      <div className="flex justify-center mt-6">
+                        <Pagination
+                          current={currentPage}
+                          pageSize={itemsPerPage}
+                          total={upcomingEvents.length}
+                          onChange={handlePaginationChange}
+                          showSizeChanger={false}
+                        />
+                      </div>
+                    </>
+                  ),
+                },
+                {
+                  key: "past",
+                  label: `Past Events (${pastEvents.length})`,
+                  children: (
+                    <>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        {getPaginatedData(pastEvents).map(renderEventCard)}
+                      </div>
+                      <div className="flex justify-center mt-6">
+                        <Pagination
+                          current={currentPage}
+                          pageSize={itemsPerPage}
+                          total={pastEvents.length}
+                          onChange={handlePaginationChange}
+                          showSizeChanger={false}
+                        />
+                      </div>
+                    </>
+                  ),
+                },
+              ]}
+            />
+          </Card>
         </div>
-
-        <StyledPaginationContainer>
-          {activeTab === "upcoming" ? (
-            <Pagination
-              current={upcomingPage}
-              pageSize={itemsPerPage}
-              total={upcomingEvents.length}
-              onChange={setUpcomingPage}
-              showSizeChanger={false}
-            />
-          ) : (
-            <Pagination
-              current={pastPage}
-              pageSize={itemsPerPage}
-              total={pastEvents.length}
-              onChange={setPastPage}
-              showSizeChanger={false}
-            />
-          )}
-        </StyledPaginationContainer>
       </AuthenticatedLayout>
     </ErrorBoundary>
   );

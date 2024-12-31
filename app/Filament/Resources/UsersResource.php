@@ -14,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Hugomyb\FilamentMediaAction\Forms\Components\Actions\MediaAction;
 use Filament\Tables\Actions\Action;
 use Illuminate\Support\Facades\Storage;
+use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Mail;
 
 
 
@@ -48,24 +50,27 @@ class UsersResource extends Resource
                     ->email()
                     ->required()
                     ->unique(ignoreRecord: true),
+
                     Forms\Components\TextInput::make('password')
                     ->label('Password')
+                    ->revealable()
                     ->password()
-                    ->required(fn ($context) => $context === 'create') // Required only on creation
-                    ->minLength(8)
-                    ->same('password_confirmation') // Optional: Add password confirmation
-                    ->dehydrateStateUsing(fn ($state) => bcrypt($state)),
                     
-                Forms\Components\TextInput::make('password_confirmation')
+                    ->nullable() // Allow null values during edits
+                    ->minLength(8) // Enforce length only if entered
+                   ->hiddenOn('edit')
+                    ->required(fn ($context) => $context === 'create'),
+                    
+                    Forms\Components\TextInput::make('password_confirmation')
                     ->label('Confirm Password')
                     ->password()
-                    ->required(fn ($context) => $context === 'create')
-                    ->hidden(fn ($context) => $context !== 'create'),
+                    ->nullable() // Allow null values during edits
+                    ->hiddenOn('edit'),
+  
 
-                Forms\Components\CheckboxList::make('roles')
-                    ->label('Roles')
+                    Forms\Components\CheckboxList::make('roles')
                     ->relationship('roles', 'name')
-                    ->columns(2),
+                    ->searchable(),
             ]);
     }
 
@@ -126,6 +131,14 @@ class UsersResource extends Resource
                 ->since()
                 ->sortable()
                 ->toggleable(isToggledHiddenByDefault: true),
+
+            Tables\Columns\BadgeColumn::make('approval_status')
+                ->label('Status')
+                ->colors([
+                    'danger' => 'rejected',
+                    'warning' => 'pending',
+                    'success' => 'approved',
+                ]),
         ])
             ->defaultSort('created_at', 'desc')
             ->filters([
@@ -134,11 +147,52 @@ class UsersResource extends Resource
                     ->label('Verified'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
-                Tables\Actions\EditAction::make(),
+                // Add Approve Action
+                Action::make('approve')
+                    ->label('Approve')
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->visible(fn ($record) => $record->approval_status === 'pending')
+                    ->action(function ($record) {
+                        $record->update([
+                            'approval_status' => 'approved',
+                            'approved_at' => now(),
+                        ]);
+
+                        // Send approval email
+                        Mail::to($record->email)->send(new \App\Mail\AccountApproved($record));
+
+                        Notification::make()
+                            ->title('User Approved')
+                            ->success()
+                            ->send();
+                    }),
+
+                // Add Reject Action
+                Action::make('reject')
+                    ->label('Reject')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn ($record) => $record->approval_status === 'pending')
+                    ->requiresConfirmation()
+                    ->action(function ($record) {
+                        $record->update([
+                            'approval_status' => 'rejected',
+                        ]);
+
+                        // Send rejection email
+                        Mail::to($record->email)->send(new \App\Mail\AccountRejected($record));
+
+                        Notification::make()
+                            ->title('User Rejected')
+                            ->danger()
+                            ->send();
+                    }),
+                    Tables\Actions\ViewAction::make(),
+                    Tables\Actions\EditAction::make(),
                 
                 // Custom action to view media
-                Action::make('viewMedia')
+              /*  Action::make('viewMedia')
                     ->label('View Media')
                     ->icon('heroicon-o-video-camera')
                     ->action(function ($record) {
@@ -148,6 +202,8 @@ class UsersResource extends Resource
                             ->autoplay(fn($record, $mediaType) => $mediaType === 'video');
                     })
                     ->requiresConfirmation(), // Optional: to show a modal
+                    */
+                
 
                   //  Action::make('activities')->url(fn ($record) => UsersResource::getUrl('activities', ['record' => $record]))
             ])

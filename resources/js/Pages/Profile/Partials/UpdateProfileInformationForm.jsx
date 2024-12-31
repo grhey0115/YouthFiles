@@ -9,8 +9,10 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
     const user = usePage().props.auth.user;
 
     const { data, setData, patch, errors, processing, recentlySuccessful } = useForm({
-        name: user.name,
-        email: user.email,
+        first_name: user.first_name || '',  // Ensure it falls back to empty string if undefined
+        middle_name: user.middle_name || '',
+        last_name: user.last_name || '',
+       
     });
 
     const submit = (e) => {
@@ -31,37 +33,52 @@ export default function UpdateProfileInformation({ mustVerifyEmail, status, clas
 
             <form onSubmit={submit} className="mt-6 space-y-6">
                 <div>
-                    <InputLabel htmlFor="name" value="Name" />
+                    <InputLabel htmlFor="first_name" value="First Name" />
 
                     <TextInput
-                        id="name"
+                        id="first_name"
                         className="mt-1 block w-full"
-                        value={data.name}
-                        onChange={(e) => setData('name', e.target.value)}
+                        value={data.first_name}
+                        onChange={(e) => setData('first_name', e.target.value)}
                         required
                         isFocused
-                        autoComplete="name"
+                        autoComplete="given-name"
                     />
 
-                    <InputError className="mt-2" message={errors.name} />
+                    <InputError className="mt-2" message={errors.first_name} />
                 </div>
 
                 <div>
-                    <InputLabel htmlFor="email" value="Email" />
+                    <InputLabel htmlFor="middle_name" value="Middle Name" />
 
                     <TextInput
-                        id="email"
-                        type="email"
+                        id="middle_name"
                         className="mt-1 block w-full"
-                        value={data.email}
-                        onChange={(e) => setData('email', e.target.value)}
+                        value={data.middle_name}
+                        onChange={(e) => setData('middle_name', e.target.value)}
                         required
-                        autoComplete="username"
+                        autoComplete="additional-name"
                     />
 
-                    <InputError className="mt-2" message={errors.email} />
+                    <InputError className="mt-2" message={errors.middle_name} />
                 </div>
 
+                <div>
+                    <InputLabel htmlFor="last_name" value="Last Name" />
+
+                    <TextInput
+                        id="last_name"
+                        className="mt-1 block w-full"
+                        value={data.last_name}
+                        onChange={(e) => setData('last_name', e.target.value)}
+                        required
+                        autoComplete="family-name"
+                    />
+
+                    <InputError className="mt-2" message={errors.last_name} />
+                </div>
+
+               
                 {mustVerifyEmail && user.email_verified_at === null && (
                     <div>
                         <p className="text-sm mt-2 text-gray-800">

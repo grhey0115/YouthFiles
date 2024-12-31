@@ -22,18 +22,21 @@ const AdditionalInformation = ({
     handleSubmit,
     handleTagChange
   }) => {
+
+  // Ensure radio button values are strings
+  const radioValue = (value) => value?.toString() || '0';
+
   return (  
     <div className="w-full max-w-4xl mx-auto">
-    <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2 mb-2">
+      <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2 mb-2">
         <FaInfoCircle className="text-blue-500" />
         Additional Information
       </h2>
       <p className="text-gray-600 text-center mb-8">Please provide additional details about yourself</p>
-    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Current Employment */}
         <div className="space-y-2 col-span-2">
             <label className="block text-sm font-medium text-gray-700">Currently Working?</label>
-            
             <div className="flex space-x-4">
                 <label>
                     <input
@@ -41,7 +44,7 @@ const AdditionalInformation = ({
                         name="is_currently_working"
                         value="1"
                         onChange={handleChange}
-                        checked={data.is_currently_working === '1'}
+                        checked={radioValue(data.is_currently_working) === '1'}
                         className="mr-2"
                     />
                     Yes
@@ -52,7 +55,7 @@ const AdditionalInformation = ({
                         name="is_currently_working"
                         value="0"
                         onChange={handleChange}
-                        checked={data.is_currently_working === '0'}
+                        checked={radioValue(data.is_currently_working) === '0'}
                         className="mr-2"
                     />
                     No
@@ -64,7 +67,7 @@ const AdditionalInformation = ({
         <div className="space-y-2 col-span-2">
             <label className="block text-sm font-medium text-gray-700">Hobbies</label>
             <TagsInput
-                tags={data.hobbies}
+                tags={data.hobbies || []}
                 onChange={handleTagChange}
                 placeholder="Enter your hobbies"
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -82,7 +85,7 @@ const AdditionalInformation = ({
                           name="is_pwd"
                           value="1"
                           onChange={handleChange}
-                          checked={data.is_pwd === '1'}
+                          checked={radioValue(data.is_pwd) === '1'}
                           className="mr-2"
                       />
                       Yes
@@ -93,7 +96,7 @@ const AdditionalInformation = ({
                           name="is_pwd"
                           value="0"
                           onChange={handleChange}
-                          checked={data.is_pwd === '0'}
+                          checked={radioValue(data.is_pwd) === '0'}
                           className="mr-2"
                       />
                       No
@@ -111,7 +114,7 @@ const AdditionalInformation = ({
                           name="has_conflict_with_law"
                           value="1"
                           onChange={handleChange}
-                          checked={data.has_conflict_with_law === '1'}
+                          checked={radioValue(data.has_conflict_with_law) === '1'}
                           className="mr-2"
                       />
                       Yes
@@ -122,7 +125,7 @@ const AdditionalInformation = ({
                           name="has_conflict_with_law"
                           value="0"
                           onChange={handleChange}
-                          checked={data.has_conflict_with_law === '0'}
+                          checked={radioValue(data.has_conflict_with_law) === '0'}
                           className="mr-2"
                       />
                       No
@@ -140,7 +143,7 @@ const AdditionalInformation = ({
                           name="is_indigenous"
                           value="1"
                           onChange={handleChange}
-                          checked={data.is_indigenous === '1'}
+                          checked={radioValue(data.is_indigenous) === '1'}
                           className="mr-2"
                       />
                       Yes
@@ -151,7 +154,7 @@ const AdditionalInformation = ({
                           name="is_indigenous"
                           value="0"
                           onChange={handleChange}
-                          checked={data.is_indigenous === '0'}
+                          checked={radioValue(data.is_indigenous) === '0'}
                           className="mr-2"
                       />
                       No
@@ -169,7 +172,7 @@ const AdditionalInformation = ({
                           name="is_registered_voter"
                           value="1"
                           onChange={handleChange}
-                          checked={data.is_registered_voter === '1'}
+                          checked={radioValue(data.is_registered_voter) === '1'}
                           className="mr-2"
                       />
                       Yes
@@ -180,7 +183,7 @@ const AdditionalInformation = ({
                           name="is_registered_voter"
                           value="0"
                           onChange={handleChange}
-                          checked={data.is_registered_voter === '0'}
+                          checked={radioValue(data.is_registered_voter) === '0'}
                           className="mr-2"
                       />
                       No
@@ -198,7 +201,7 @@ const AdditionalInformation = ({
                           name="attended_assembly"
                           value="1"
                           onChange={handleChange}
-                          checked={data.attended_assembly === '1'}
+                          checked={radioValue(data.attended_assembly) === '1'}
                           className="mr-2"
                       />
                       Yes
@@ -209,7 +212,7 @@ const AdditionalInformation = ({
                           name="attended_assembly"
                           value="0"
                           onChange={handleChange}
-                          checked={data.attended_assembly === '0'}
+                          checked={radioValue(data.attended_assembly) === '0'}
                           className="mr-2"
                       />
                       No
@@ -219,12 +222,12 @@ const AdditionalInformation = ({
       </div>
 
       {/* Reason for Not Attending Assembly */}
-      {data.attended_assembly === '0' && (
+      {radioValue(data.attended_assembly) === '0' && (
           <div className="space-y-2 col-span-2">
               <label className="block text-sm font-medium text-gray-700">Why No Assembly</label>
               <textarea
                   name="why_no_assembly"
-                  value={data.why_no_assembly}
+                  value={data.why_no_assembly || ''}
                   onChange={handleChange}
                   rows="4"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -238,7 +241,7 @@ const AdditionalInformation = ({
             <label className="block text-sm font-medium text-gray-700">Residency Status</label>
             <select
                 name="residency_status"
-                value={data.residency_status}
+                value={data.residency_status || 'Permanent'}
                 onChange={handleChange}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -270,4 +273,3 @@ const AdditionalInformation = ({
 };  
   
 export default AdditionalInformation;
-

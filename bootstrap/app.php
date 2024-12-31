@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'otp_verified' => \App\Http\Middleware\EnsureOtpIsVerified::class,
             'profile.complete' => \App\Http\Middleware\EnsureProfileIsComplete::class,
+            'approved' => \App\Http\Middleware\CheckUserApproval::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

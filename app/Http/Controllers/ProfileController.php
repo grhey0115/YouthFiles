@@ -143,38 +143,63 @@ class ProfileController extends Controller
             'residency_status' => 'required|in:Permanent,Temporary',
         ]);
 
-        AdditionalInformation::updateOrCreate(
-            ['user_id' => $request->user()->id],
-            $request->only([
-                'is_currently_working', 'hobbies', 'is_pwd',
-                'has_conflict_with_law', 'is_indigenous',
-                'is_registered_voter', 'attended_assembly',
-                'why_no_assembly', 'residency_status'
-            ])
-        );
+        try {
+            // Get the request data
+            $data = $request->only([
+                'is_currently_working',
+                'is_pwd',
+                'has_conflict_with_law',
+                'is_indigenous',
+                'is_registered_voter',
+                'attended_assembly',
+                'why_no_assembly',
+                'residency_status'
+            ]);
 
-        return Redirect::route('profile.form');
+            // Handle hobbies separately
+            $data['hobbies'] = $request->input('hobbies', []);
+
+            AdditionalInformation::updateOrCreate(
+                ['user_id' => $request->user()->id],
+                $data
+            );
+
+            return Redirect::route('profile.form')
+                ->with('success', 'Additional information saved successfully.');
+        } catch (\Exception $e) {
+            \Log::error('Error saving additional information: ' . $e->getMessage());
+            return Redirect::route('profile.form')
+                ->with('error', 'Failed to save additional information.')
+                ->withInput();
+        }
     }
 
-    public function postStep4(Request $request): RedirectResponse
+    public function postStep4(Request $request)
     {
-        $request->validate([
+        // Validate and save step 4 data
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'relationship' => 'required|string|max:255',
             'contact_number' => 'required|string|max:20',
             'address' => 'nullable|string|max:255',
         ]);
-
         EmergencyContact::updateOrCreate(
             ['user_id' => $request->user()->id],
             $request->only([
                 'name', 'relationship', 'contact_number', 'address'
             ])
         );
+        $user = auth()->user();
+        
+        // Save the data
+        $user->update([
+            // ... save your form data
+            'profile_completed' => true,
+            'approval_status' => 'pending', // Set status to pending after form completion
+        ]);
 
-        $request->user()->update(['profile_completed' => true]);
-
-        return Redirect::route('dashboard');
+        // Redirect to pending approval page
+        return redirect()->route('pending-approval');
     }
 
     public function view(Request $request): Response

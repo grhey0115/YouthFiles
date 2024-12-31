@@ -36,41 +36,27 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $user = Auth::user();
-        $userAgent = $request->header('User-Agent');
-        $ipAddress = $request->ip();
-
-        // Check if this device/browser is already recognized
-        $knownDevice = UserDevice::where('user_id', $user->id)
-            ->where('user_agent', $userAgent)
-            ->where('ip_address', $ipAddress)
-            ->first();
-
-        // If this is a new device or browser
-        if (!$knownDevice) {
-            // Generate OTP for new device
-            $otp = mt_rand(100000, 999999);  // Generate a 6-digit OTP
-
-            // Store the device information and OTP
-            UserDevice::create([
-                'user_id' => $user->id,
-                'user_agent' => $userAgent,
-                'ip_address' => $ipAddress,
-                'otp' => $otp,
-                'otp_expires_at' => Carbon::now()->addMinutes(10),  // Set OTP expiry time
-            ]);
-
-            // Send OTP to the user's email
-            $user->notify(new OTPNotification($otp));
-
-            // Redirect to OTP verification page
-            return redirect()->route('otp.verify');
-        }
-
-        // If device is already recognized, allow normal login
         $request->session()->regenerate();
 
-        return redirect()->intended('dashboard');
+        $user = Auth::user();
+
+        // Check email verification
+        if (!$user->hasVerifiedEmail()) {
+            return redirect()->route('verification.notice');
+        }
+
+        // If email is verified but profile is not completed
+        if ($user->hasVerifiedEmail() && !$user->profile_completed) {
+            return redirect()->route('profile.form');
+        }
+
+        // If profile is completed but pending approval
+        if ($user->profile_completed && $user->approval_status === 'pending') {
+            return redirect()->route('pending-approval');
+        }
+
+        // If everything is verified and approved
+        return redirect()->route('dashboard');
     }
 
     /**

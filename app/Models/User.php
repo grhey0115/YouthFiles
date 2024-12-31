@@ -14,12 +14,13 @@ use BezhanSalleh\FilamentShield\Traits\HasPanelShield;
 use Afsakar\FilamentOtpLogin\Models\Contracts\CanLoginDirectly;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Support\Facades\Storage;
+use Filament\Panel;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, CanLoginDirectly, HasName
 {
     use HasFactory, Notifiable, HasRoles, HasPanelShield;
 
-
+   
     // Verification Status Constants
     const STATUS_PENDING = 'pending';
     const STATUS_IN_PROGRESS = 'in_progress';
@@ -46,6 +47,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
         'verified_at',
         'rejection_reason',
         'profile_completed',
+        'approval_status',
+        'approved_at',
     ];
 
     /**
@@ -69,6 +72,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
         'verified_at' => 'datetime',
         'verification_steps' => 'array',
         'profile_completed' => 'boolean',
+        'approved_at' => 'datetime',
     ];
     public function isVerified(): bool
     {
@@ -123,11 +127,11 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
     {
         return $this->first_name;
     }
-    public function canAccessFilament(): bool
+  /*  public function canAccessFilament(): bool
 {
     // Implement your logic to check if the user can access the Filament panel.
-    return $this->hasRole('super_admin'); // Example logic: only super_admin can access
-}
+    return $this->roles()->count() > 0; // Example logic: only super_admin can access
+}*/
 
     public function personalInformation()
     {
@@ -219,5 +223,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Can
     {
         return str($this->email)->endsWith('@email.com');
     }
+ /*   public function canAccessPanel(Panel $panel): bool
+    {
+        return str_ends_with($this->email, 'dirtydnc3@gmail.com');
+    }*/
    
 }

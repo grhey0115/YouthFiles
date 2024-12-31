@@ -243,13 +243,14 @@ const PersonalInformationStep = ({
 
       
         <div className="flex mt-4 col-span-2">
-          <button
-            type="button"
-            onClick={handleNextStep}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg flex-grow mb-6"
-          >
-            Next
-          </button>
+        <button
+          type="button"
+          onClick={handleNextStep}
+          disabled={!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status}
+          className={`px-4 py-2 rounded-lg flex-grow mb-6 ${!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white'}`}
+        >
+          Next
+        </button>
         </div>
       </form>
     </div>

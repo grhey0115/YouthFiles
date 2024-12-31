@@ -1,30 +1,44 @@
-import React from 'react';
+import {React,useState} from 'react';
 import { usePage } from '@inertiajs/react';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head } from '@inertiajs/react';
 import { 
     Card, Row, Col, Statistic, Progress, 
-    Descriptions, Table, Tag, Space, Divider, Typography, Timeline, Button 
+    Descriptions, Table, Tag, Space, Divider, Typography, Timeline, Button, Badge, Layout 
 } from 'antd';
 import { 
     CalendarOutlined, DollarOutlined, 
     CheckCircleOutlined, ClockCircleOutlined,
     FileTextOutlined, TeamOutlined,
     ShoppingOutlined, BankOutlined,
-    UpOutlined, DownOutlined
+    UpOutlined, DownOutlined,
+    EnvironmentOutlined
 } from '@ant-design/icons';
 
 const { Title, Text, Paragraph } = Typography;
 
 const ProjectShow = () => {
     const { project, auth } = usePage().props;
+    const [activeTab, setActiveTab] = useState('procurements');
 
     const formatCurrency = (amount) => {
+        // Handle undefined, null, or NaN values
+        const numericAmount = Number(amount) || 0;
         return new Intl.NumberFormat('en-PH', {
             style: 'currency',
             currency: 'PHP'
-        }).format(amount || 0);
+        }).format(numericAmount);
     };
+
+    const calculateTotalCost = (items) => {
+        if (!Array.isArray(items)) return 0;
+        return items.reduce((sum, item) => {
+            const itemCost = Number(item.total_cost) || 0;
+            return sum + itemCost;
+        }, 0);
+    };
+
+    
 
     const getStatusColor = (status) => {
         const colors = {
@@ -278,73 +292,96 @@ const ProjectShow = () => {
     );
 
     return (
-        <AuthenticatedLayout user={auth}>
+        <AuthenticatedLayout user={auth} activeTab="projects">
             <Head title={project.name} />
-
-            <div className="container mx-auto p-6">
-                {/* Project Header */}
-                <Card className="mb-6">
-                    <div className="relative mb-6">
-                        <img
-                            src={project.header_image ? `/storage/${project.header_image}` : '/default-project-image.jpg'}
-                            alt={project.name}
-                            className="w-full h-64 object-cover rounded-lg"
-                            onError={(e) => {
-                                e.target.src = '/default-project-image.jpg';
-                            }}
-                        />
-                        <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/70 to-transparent">
-                            <Title level={2} className="text-white mb-2">{project.name}</Title>
-                            <Tag color={getStatusColor(project.status)} className="text-sm">
-                                {project.status?.toUpperCase() || 'UNKNOWN'} 
-                            </Tag>
+            <Layout.Content className="container mx-auto p-2 md:p-4">
+                {/* Hero Section */}
+                <Card 
+                    bordered={false} 
+                    className="mb-4 md:mb-6 overflow-hidden"
+                    cover={
+                        <div className="relative h-[250px] md:h-[400px] w-full">
+                            <div className="absolute inset-0 bg-black/50 z-10" />
+                            <img
+                                src={project.header_image ? `/storage/${project.header_image}` : '/default-project-image.jpg'}
+                                alt="Project Banner"
+                                className="w-full h-full object-cover"
+                            />
+                            
+                            {/* Project Title Overlay */}
+                            <div className="absolute inset-0 z-20 flex flex-col justify-center items-center text-white p-4">
+                                <h1 className="text-2xl md:text-5xl font-bold text-center mb-2 md:mb-4">{project.name}</h1>
+                                <div className="flex flex-wrap justify-center gap-2 md:gap-6 text-base md:text-lg">
+                                    <Badge 
+                                        count={formatCurrency(project.total_budget)}
+                                        style={{ 
+                                            backgroundColor: '#52c41a',
+                                            fontSize: '12px',
+                                            md: '14px',
+                                            padding: '0 8px'
+                                        }}
+                                    />
+                                </div>
+                            </div>
                         </div>
-                    </div>
-
+                    }
+                >
                     {/* Project Statistics */}
-                    <Row gutter={16}>
-                        <Col xs={24} sm={12} md={6}>
-                            <Statistic
-                                title="Total Budget"
-                                value={project.total_budget}
-                                prefix={<DollarOutlined />}
-                                formatter={formatCurrency}
-                            />
+                    <Row gutter={[8, 8]} className="mt-4">
+                        <Col xs={12} sm={12} md={6}>
+                            <Card className="text-center h-full">
+                                <Statistic
+                                    title={<span className="text-xs md:text-sm">Total Budget</span>}
+                                    value={project.total_budget}
+                                    prefix={<DollarOutlined />}
+                                    formatter={formatCurrency}
+                                    className="text-sm md:text-base"
+                                />
+                            </Card>
                         </Col>
-                        <Col xs={24} sm={12} md={6}>
-                            <Statistic
-                                title="Remaining Budget"
-                                value={project.remaining_budget}
-                                prefix={<DollarOutlined />}
-                                formatter={formatCurrency}
-                                valueStyle={{ color: project.remaining_budget > 0 ? '#3f8600' : '#cf1322' }}
-                            />
+                        <Col xs={12} sm={12} md={6}>
+                            <Card className="text-center h-full">
+                                <Statistic
+                                    title={<span className="text-xs md:text-sm">Remaining</span>}
+                                    value={project.remaining_budget}
+                                    prefix={<DollarOutlined />}
+                                    formatter={formatCurrency}
+                                    valueStyle={{ color: project.remaining_budget > 0 ? '#3f8600' : '#cf1322' }}
+                                    className="text-sm md:text-base"
+                                />
+                            </Card>
                         </Col>
-                        <Col xs={24} sm={12} md={6}>
-                            <Statistic
-                                title="Project Duration"
-                                value={project.project_duration}
-                                prefix={<ClockCircleOutlined />}
-                            />
+                        <Col xs={12} sm={12} md={6}>
+                            <Card className="text-center h-full">
+                                <Statistic
+                                    title={<span className="text-xs md:text-sm">Duration</span>}
+                                    value={project.project_duration}
+                                    prefix={<ClockCircleOutlined />}
+                                    className="text-sm md:text-base"
+                                />
+                            </Card>
                         </Col>
-                        <Col xs={24} sm={12} md={6}>
-                            <Statistic
-                                title="Progress"
-                                value={project.progress}
-                                prefix={<CheckCircleOutlined />}
-                                suffix="%"
-                            />
-                            <Progress percent={project.progress} status={project.status === 'completed' ? 'success' : 'active'} />
+                        <Col xs={12} sm={12} md={6}>
+                            <Card className="text-center h-full">
+                                <Statistic
+                                    title={<span className="text-xs md:text-sm">Progress</span>}
+                                    value={project.progress}
+                                    prefix={<CheckCircleOutlined />}
+                                    suffix="%"
+                                    className="text-sm md:text-base"
+                                />
+                                <Progress percent={project.progress} size="small" />
+                            </Card>
                         </Col>
                     </Row>
                 </Card>
 
                 {/* Project Details */}
-                <Row gutter={16}>
+                <Row gutter={[8, 8]}>
                     <Col xs={24} lg={12}>
-                        <Card title="Project Information" className="mb-6">
-                            <Descriptions column={1}>
-                                <Descriptions.Item label="Description">
+                        <Card title="Project Information" className="mb-4">
+                            <Descriptions column={{ xxl: 1, xl: 1, lg: 1, md: 1, sm: 1, xs: 1 }} size="small">
+                                <Descriptions.Item label="Description" className="whitespace-pre-wrap">
                                     {project.description}
                                 </Descriptions.Item>
                                 <Descriptions.Item label="Start Date">
@@ -355,172 +392,153 @@ const ProjectShow = () => {
                                     <CalendarOutlined className="mr-2" />
                                     {new Date(project.end_date).toLocaleDateString()}
                                 </Descriptions.Item>
-                                <Descriptions.Item label="Budget Source">
-                                    <FileTextOutlined className="mr-2" />
-                                    {project.budget?.name || 'N/A'} 
-                                </Descriptions.Item>
                             </Descriptions>
                         </Card>
                     </Col>
 
                     <Col xs={24} lg={12}>
-                        <Card title="Budget Utilization" className="mb-6">
-                            <Progress
-                                type="circle"
-                                percent={((project.total_budget - project.remaining_budget) / project.total_budget * 100).toFixed(1)}
-                                format={percent => `${percent}% Used`}
-                            />
-                            <Divider />
-                            <Space direction="vertical" size="small">
-                                <Text>Total Budget: {formatCurrency(project.total_budget)}</Text>
-                                <Text>Used: {formatCurrency(project.total_budget - project.remaining_budget)}</Text>
-                                <Text>Remaining: {formatCurrency(project.remaining_budget)}</Text>
-                            </Space>
+                        <Card title="Budget Utilization" className="mb-4">
+                            <div className="flex flex-col items-center">
+                                <Progress
+                                    type="circle"
+                                    percent={((project.total_budget - project.remaining_budget) / project.total_budget * 100).toFixed(1)}
+                                    format={percent => `${percent}% Used`}
+                                    size="small"
+                                />
+                                <Divider className="my-2" />
+                                <Space direction="vertical" size="small" className="text-sm">
+                                    <Text>Total: {formatCurrency(project.total_budget)}</Text>
+                                    <Text>Used: {formatCurrency(project.total_budget - project.remaining_budget)}</Text>
+                                    <Text>Remaining: {formatCurrency(project.remaining_budget)}</Text>
+                                </Space>
+                            </div>
                         </Card>
                     </Col>
                 </Row>
 
-                {/* Procurement Section */}
-                <Card 
-                    title={
-                        <Space>
-                            <ShoppingOutlined />
-                            <span>Project Procurements</span>
-                        </Space>
-                    }
-                    className="mb-6"
-                >
-                    <Table
-                        columns={procurementColumns}
-                        dataSource={project.procurements}
-                        rowKey="id"
-                        expandable={{
-                            expandedRowRender,
-                            expandRowByClick: true,
-                            expandIcon: ({ expanded, onExpand, record }) => 
-                                expanded ? (
-                                    <Button 
-                                        type="text" 
-                                        icon={<UpOutlined />} 
-                                        onClick={e => onExpand(record, e)}
-                                    />
-                                ) : (
-                                    <Button 
-                                        type="text" 
-                                        icon={<DownOutlined />} 
-                                        onClick={e => onExpand(record, e)}
-                                    />
-                                ),
-                        }}
-                        pagination={{ 
-                            pageSize: 5,
-                            showTotal: (total, range) => 
-                                `${range[0]}-${range[1]} of ${total} procurements`,
-                        }}
-                        summary={(pageData) => {
-                            const totalProcurementCost = pageData.reduce(
-                                (sum, procurement) => sum + procurement.procurement_cost,
-                                0
-                            );
+                {/* Mobile Tab Buttons */}
+                <div className="flex gap-2 mb-4 md:hidden">
+                    <Button 
+                        type={activeTab === 'procurements' ? 'primary' : 'default'}
+                        onClick={() => setActiveTab('procurements')}
+                        block
+                    >
+                        <ShoppingOutlined /> Procurements
+                    </Button>
+                    <Button 
+                        type={activeTab === 'disbursements' ? 'primary' : 'default'}
+                        onClick={() => setActiveTab('disbursements')}
+                        block
+                    >
+                        <BankOutlined /> Disbursements
+                    </Button>
+                </div>
 
-                            return (
-                                <Table.Summary fixed>
-                                    <Table.Summary.Row>
-                                        <Table.Summary.Cell index={0} colSpan={2}>
-                                            <strong>Total Procurement Cost:</strong>
-                                        </Table.Summary.Cell>
-                                        <Table.Summary.Cell index={2}>
-                                            <strong>{formatCurrency(totalProcurementCost)}</strong>
-                                        </Table.Summary.Cell>
-                                        <Table.Summary.Cell index={3} colSpan={4} />
-                                    </Table.Summary.Row>
-                                </Table.Summary>
-                            );
-                        }}
-                    />
-                </Card>
+                {/* Responsive Tables */}
+                <div className="md:hidden">
+                    {activeTab === 'procurements' && (
+                        <Card className="mb-4">
+                            <Table
+                                columns={procurementColumns.filter(col => ['pr_no', 'cost', 'status'].includes(col.key))}
+                                dataSource={project.procurements}
+                                rowKey="id"
+                                expandable={{
+                                    expandedRowRender,
+                                    expandRowByClick: true,
+                                }}
+                                pagination={{ pageSize: 5 }}
+                                scroll={{ x: true }}
+                                size="small"
+                            />
+                        </Card>
+                    )}
 
-                {/* Disbursement Section */}
-                <Card 
-                    title={
-                        <Space>
-                            <BankOutlined />
-                            <span>Project Disbursements</span>
-                        </Space>
-                    }
-                    className="mb-6"
-                >
-                    <Table
-                        columns={disbursementColumns}
-                        dataSource={project.disbursements}
-                        rowKey="id"
-                        expandable={{
-                            expandedRowRender: expandedDisbursementRender,
-                            expandRowByClick: true,
-                        }}
-                        pagination={{ 
-                            pageSize: 5,
-                            showTotal: (total, range) => 
-                                `${range[0]}-${range[1]} of ${total} disbursements`,
-                        }}
-                        summary={(pageData) => {
-                            const totalDisbursed = pageData.reduce(
-                                (sum, disbursement) => sum + (disbursement.disbursed_amount || 0),
-                                0
-                            );
+                    {activeTab === 'disbursements' && (
+                        <Card className="mb-4">
+                            <Table
+                                columns={disbursementColumns.filter(col => ['disbursement_no', 'amount', 'status'].includes(col.key))}
+                                dataSource={project.disbursements}
+                                rowKey="id"
+                                expandable={{
+                                    expandedRowRender: expandedDisbursementRender,
+                                    expandRowByClick: true,
+                                }}
+                                pagination={{ pageSize: 5 }}
+                                scroll={{ x: true }}
+                                size="small"
+                            />
+                        </Card>
+                    )}
+                </div>
 
-                            return (
-                                <Table.Summary fixed>
-                                    <Table.Summary.Row>
-                                        <Table.Summary.Cell index={0} colSpan={2}>
-                                            <strong>Total Disbursed Amount:</strong>
-                                        </Table.Summary.Cell>
-                                        <Table.Summary.Cell index={2}>
-                                            <strong>{formatCurrency(project.total_budget - project.remaining_budget)}</strong>
-                                        </Table.Summary.Cell>
-                                        <Table.Summary.Cell index={3} colSpan={4} />
-                                    </Table.Summary.Row>
-                                </Table.Summary>
-                            );
-                        }}
-                    />
-                </Card>
+                {/* Desktop Tables */}
+                <div className="hidden md:block">
+                    <Card title={<Space><ShoppingOutlined />Project Procurements</Space>} className="mb-6">
+                        <Table
+                            columns={procurementColumns}
+                            dataSource={project.procurements}
+                            rowKey="id"
+                            expandable={{
+                                expandedRowRender,
+                                expandRowByClick: true,
+                            }}
+                            pagination={{ pageSize: 5 }}
+                        />
+                    </Card>
 
-                {/* Financial Summary Section */}
-                <Card title="Financial Summary" className="mb-6">
-                    <Row gutter={16}>
+                    <Card title={<Space><BankOutlined />Project Disbursements</Space>} className="mb-6">
+                        <Table
+                            columns={disbursementColumns}
+                            dataSource={project.disbursements}
+                            rowKey="id"
+                            expandable={{
+                                expandedRowRender: expandedDisbursementRender,
+                                expandRowByClick: true,
+                            }}
+                            pagination={{ pageSize: 5 }}
+                        />
+                    </Card>
+                </div>
+
+                {/* Financial Summary */}
+                <Card title="Financial Summary" className="mb-4">
+                    <Row gutter={[8, 8]}>
                         <Col xs={24} sm={8}>
                             <Statistic
-                                title="Total Budget"
+                                title={<span className="text-xs md:text-sm">Total Budget</span>}
                                 value={project.total_budget}
                                 prefix={<DollarOutlined />}
                                 formatter={formatCurrency}
+                                className="text-sm md:text-base"
                             />
                         </Col>
                         <Col xs={24} sm={8}>
                             <Statistic
-                                title="Total Procurements"
+                                title={<span className="text-xs md:text-sm">Total Procurements</span>}
                                 value={project.procurements?.reduce((sum, p) => sum + (p.procurement_cost || 0), 0)}
                                 prefix={<ShoppingOutlined />}
                                 formatter={formatCurrency}
+                                className="text-sm md:text-base"
                             />
                         </Col>
                         <Col xs={24} sm={8}>
-                        <Statistic
-                            title="Total Disbursements"
-                            value={formatCurrency(project.total_budget - project.remaining_budget)}
-                            prefix={<BankOutlined />}
-                        />
+                            <Statistic
+                                title={<span className="text-xs md:text-sm">Total Disbursements</span>}
+                                value={project.total_budget - project.remaining_budget}
+                                prefix={<BankOutlined />}
+                                formatter={formatCurrency}
+                                className="text-sm md:text-base"
+                            />
                         </Col>
                     </Row>
-                    <Divider />
+                    <Divider className="my-4" />
                     <Progress
                         percent={((project.total_budget - project.remaining_budget) / project.total_budget * 100).toFixed(1)}
                         status="active"
                         format={percent => `${percent}% Used`}
                     />
                 </Card>
-            </div>
+            </Layout.Content>
         </AuthenticatedLayout>
     );
 };
