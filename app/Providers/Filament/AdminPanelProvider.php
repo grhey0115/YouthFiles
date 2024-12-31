@@ -80,7 +80,7 @@ class AdminPanelProvider extends PanelProvider
                SpotlightPlugin::make(),
                GlobalSearchModalPlugin::make(),
                \BezhanSalleh\FilamentGoogleAnalytics\FilamentGoogleAnalyticsPlugin::make(),
-               \DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make(),
+               //\DiscoveryDesign\FilamentGaze\FilamentGazePlugin::make(),
              
             ])
 
