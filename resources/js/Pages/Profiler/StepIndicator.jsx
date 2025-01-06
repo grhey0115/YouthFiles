@@ -45,12 +45,12 @@ const StepIndicator = ({ currentStep, setCurrentStep, completedSteps = [] }) => 
   };
 
   return (  
-    <div className="hidden md:flex md:w-1/3 bg-gradient-to-br from-red-400 via-blue-500 to-yellow-400 text-white flex-col justify-between min-h-screen relative overflow-hidden">  
+    <div className="h-full bg-gradient-to-br from-red-400 via-blue-500 to-yellow-400 text-white flex-col justify-between relative overflow-hidden">  
       {/* Decorative elements */}
       <div className="absolute inset-0 bg-[url('/images/sk-logo.png')] opacity-5 bg-center bg-no-repeat bg-contain" />
-      <div className="absolute inset-0 bg-black/20" /> {/* Overlay to improve text readability */}
+      <div className="absolute inset-0 bg-black/20" />
 
-      <div className="w-full max-w-sm mx-auto p-8 flex-1 flex flex-col relative z-10">
+      <div className="w-full p-8 flex-1 flex flex-col relative z-10">
         <div className="text-center mb-12">
           <h2 className="text-3xl font-bold mb-2">SK Profile Setup</h2>
           <p className="text-gray-200">Complete all steps to finish your profile</p>
@@ -125,8 +125,18 @@ const StepIndicator = ({ currentStep, setCurrentStep, completedSteps = [] }) => 
           ))}
         </div>
 
-        {/* Progress Bar */}
-      
+        {/* Progress Bar at the bottom */}
+        <div className="mt-auto pt-8">
+          <div className="bg-black/20 rounded-full h-2 overflow-hidden">
+            <div 
+              className="bg-yellow-400 h-full transition-all duration-500"
+              style={{ width: `${calculateProgress()}%` }}
+            />
+          </div>
+          <p className="text-center text-sm mt-2 text-gray-200">
+            {calculateProgress()}% Complete
+          </p>
+        </div>
       </div>
     </div>  
   );  

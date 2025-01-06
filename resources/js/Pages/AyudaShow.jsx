@@ -126,12 +126,6 @@ const ShareButtons = ({ event }) => {
           color: 'bg-[#1da1f2] hover:bg-[#1a94da]'
       },
       {
-          name: 'LinkedIn',
-          icon: <LinkedinFilled className="text-xl" />,
-          url: `https://www.linkedin.com/shareArticle?mini=true&url=${shareUrl}&title=${title}`,
-          color: 'bg-[#0a66c2] hover:bg-[#095fb8]'
-      },
-      {
           name: 'WhatsApp',
           icon: <WhatsAppOutlined className="text-xl" />,
           url: `https://wa.me/?text=${title}%20${shareUrl}`,

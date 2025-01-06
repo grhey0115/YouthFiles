@@ -22,6 +22,7 @@ class PaymentResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static ?string $navigationGroup = 'Events';
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {

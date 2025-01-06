@@ -32,7 +32,7 @@ export default function Authenticated({ header, children }) {
     const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
     const [loadingNotifications, setLoadingNotifications] = useState(true);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    const [isMobile, setIsMobile] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedNotification, setSelectedNotification] = useState(null);
     const [showAllNotifications, setShowAllNotifications] = useState(false);
@@ -42,11 +42,11 @@ export default function Authenticated({ header, children }) {
             setLoadingNotifications(true);
             try {
                 const response = await axios.get(route('notifications.index'));
-                console.log("Notifications response:", response.data); // Log the response
+              
                 setNotifications(response.data.data || []);
                 setUnreadNotificationsCount((response.data.data || []).filter(n => !n.read_at).length);
             } catch (error) {
-                console.error("Error fetching notifications:", error);
+                
                 setNotifications([]);
             } finally {
                 setLoadingNotifications(false);
@@ -65,6 +65,25 @@ export default function Authenticated({ header, children }) {
     useEffect(() => {
         setUnreadNotificationsCount(notifications.filter(n => !n.read_at).length);
     }, [notifications]);
+
+
+    useEffect(() => {
+        // Set initial mobile state
+        setIsMobile(window.innerWidth < 768);
+        
+        const handleResize = () => {
+            setIsMobile(window.innerWidth < 768);
+        };
+
+        // Add event listener
+        window.addEventListener('resize', handleResize);
+        
+        // Cleanup
+        return () => {
+            window.removeEventListener('resize', handleResize);
+        };
+    }, []);
+
 
     const fullName = `${user.first_name || ''} ${user.middle_name ? user.middle_name + ' ' : ''}${user.last_name || ''}`.trim();
 

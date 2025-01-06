@@ -53,7 +53,7 @@ class PurchaseRequestRelationManager extends RelationManager
             ->required()
             ->label('Procurement Date'),
 
-        Forms\Components\TextArea::make('purpose')
+        Forms\Components\Textarea::make('purpose')
             ->required()
             ->label('Purpose or Justification'),
 
@@ -87,7 +87,7 @@ class PurchaseRequestRelationManager extends RelationManager
                     ->required()  
                     ->label('Designation:'),  
             
-        Forms\Components\TextArea::make('remarks')
+        Forms\Components\Textarea::make('remarks')
             ->label('Remarks'),
 
         /*    Forms\Components\TextInput::make('allotment_available')
@@ -96,73 +96,67 @@ class PurchaseRequestRelationManager extends RelationManager
             ->disabled() // This field should only display the value, not editable by users
             ->default(0),*/
             
-          TableRepeater::make('procurement_items')
-            ->relationship('procurementItems') // Ensure this relationship exists
-            ->label('Items')
-            ->schema([
-                Forms\Components\TextInput::make('description')
-                    ->required()
-                    ->label('Item'),
-
-                    
-                
-                Forms\Components\TextInput::make('unit')
-                    ->required()
-                    ->label('Unit'),
-
-                    Forms\Components\TextInput::make('quantity')
-                    ->required()
-                    ->numeric()
-                    ->reactive() // Trigger recalculation when quantity changes
-                    ->afterStateUpdated(function ($set, $state, $get) {
-                        // Calculate total cost when quantity is updated
-                        $set('total_cost', $state * $get('unit_cost'));
-                
-                        // Recalculate total procurement cost safely (ensure procurement_items is not null)
-                        $set('procurement_cost', collect($get('procurement_items') ?? [])
-                            ->sum(fn($item) => $item['quantity'] * $item['unit_cost']));
-                    })
-                    ->label('Quantity'),
-
-                    Forms\Components\TextInput::make('unit_cost')
-                    ->required()
-                    ->numeric()
-                    ->reactive() // Trigger recalculation when unit cost changes
-                    ->afterStateUpdated(function ($set, $state, $get) {
-                        // Calculate total cost when unit cost is updated
-                        $set('total_cost', $state * $get('quantity'));
-                
-                        // Recalculate total procurement cost safely (ensure procurement_items is not null)
-                        $set('procurement_cost', collect($get('procurement_items') ?? [])
-                            ->sum(fn($item) => $item['quantity'] * $item['unit_cost']));
-                    })
-                    ->label('Unit Cost'),
-                Forms\Components\TextInput::make('total_cost')
-                    ->numeric()
-                    ->dehydrated(true)
-                // ->disabled() // Make it non-editable, it's calculated automatically
-                    ->label('Total Cost'),
-            ])
-            ->columns(5)
-            ->reactive() // Ensure the repeater is reactive
-            ->afterStateUpdated(function ($set, $state) {
-                // Recalculate total procurement cost whenever procurement items are updated
-                $set('procurement_cost', collect($state)->sum(fn($item) => $item['quantity'] * $item['unit_cost']));
-            }),
-
-            Forms\Components\TextInput::make('procurement_cost')
+         TableRepeater::make('procurement_items')
+    ->relationship('procurementItems') // Ensure this relationship exists
+    ->label('Items')
+    ->schema([
+        Forms\Components\TextInput::make('description')
+            ->required()
+            ->label('Item'),
+        Forms\Components\TextInput::make('unit')
+            ->required()
+            ->label('Unit'),
+        Forms\Components\TextInput::make('quantity')
+            ->required()
             ->numeric()
-            // ->disabled()
+            ->reactive() // Trigger recalculation when quantity changes
+            ->afterStateUpdated(function ($set, $state, $get) {
+                $quantity = (float)($state ?: 0);
+                $unitCost = (float)($get('unit_cost') ?: 0);
+                $set('total_cost', $quantity * $unitCost);
+
+                // Recalculate total procurement cost safely
+                $set('procurement_cost', collect($get('procurement_items') ?? [])
+                    ->sum(fn($item) => ((float)($item['quantity'] ?? 0)) * ((float)($item['unit_cost'] ?? 0))));
+            })
+            ->label('Quantity'),
+        Forms\Components\TextInput::make('unit_cost')
+            ->required()
+            ->numeric()
+            ->reactive() // Trigger recalculation when unit cost changes
+            ->afterStateUpdated(function ($set, $state, $get) {
+                $unitCost = (float)($state ?: 0);
+                $quantity = (float)($get('quantity') ?: 0);
+                $set('total_cost', $quantity * $unitCost);
+
+                // Recalculate total procurement cost safely
+                $set('procurement_cost', collect($get('procurement_items') ?? [])
+                    ->sum(fn($item) => ((float)($item['quantity'] ?? 0)) * ((float)($item['unit_cost'] ?? 0))));
+            })
+            ->label('Unit Cost'),
+        Forms\Components\TextInput::make('total_cost')
+            ->numeric()
             ->dehydrated(true)
-            ->label('Total Procurement Cost')
-            ->default(0)
-            ->reactive() // Ensure it updates when form state changes
-            ->afterStateUpdated(function ($set, $get) {
-                // Recalculate total procurement cost when any procurement item changes
-                $set('procurement_cost', $get('procurement_items')
-                    ->sum(fn($item) => $item['quantity'] * $item['unit_cost'])
-                );
-            }),
+            ->label('Total Cost'),
+    ])
+    ->columns(5)
+    ->reactive() // Ensure the repeater is reactive
+    ->afterStateUpdated(function ($set, $state) {
+        // Recalculate total procurement cost safely
+        $set('procurement_cost', collect($state)->sum(fn($item) => ((float)($item['quantity'] ?? 0)) * ((float)($item['unit_cost'] ?? 0))));
+    }),
+
+Forms\Components\TextInput::make('procurement_cost')
+    ->numeric()
+    ->dehydrated(true)
+    ->label('Total Procurement Cost')
+    ->default(0)
+    ->reactive() // Ensure it updates when form state changes
+    ->afterStateUpdated(function ($set, $get) {
+        // Recalculate total procurement cost when any procurement item changes
+        $set('procurement_cost', collect($get('procurement_items') ?? [])
+            ->sum(fn($item) => ((float)($item['quantity'] ?? 0)) * ((float)($item['unit_cost'] ?? 0))));
+    }),
 
                 ]);
 

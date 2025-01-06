@@ -145,7 +145,7 @@ class EmergencyRequestResource extends Resource
                             ]);
                         }
 
-                        return view('filament.modals.emergency-files', compact('files'));
+                        return view('Filament.modals.emergency-files', compact('files'));
                     }),
 
                 // Approve Action

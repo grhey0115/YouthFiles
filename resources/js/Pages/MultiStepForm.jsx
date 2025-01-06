@@ -198,27 +198,37 @@ const MultiStepForm = ({
     }
   };
 
-  return (  
-    <div className="flex flex-col md:flex-row h-screen">  
-      <StepNavigation  
-        currentStep={currentStep}  
-        goToStep={goToStep}  
-      />  
-      <div className="w-full max-w-4xl mx-auto mt-8 px-4 md:px-8">  
-        <div className="mb-6">
-          <div className="text-sm text-gray-600 mb-2">
-            Profile Completion Progress
+  return (
+    <div className="flex h-screen overflow-hidden">
+      {/* Fixed left navigation - hidden on mobile */}
+      <div className="hidden md:block fixed left-0 h-full w-96">
+        <StepNavigation
+          currentStep={currentStep}
+          setCurrentStep={goToStep}
+          completedSteps={Array.from({ length: currentStep - 1 }, (_, i) => i + 1)}
+        />
+      </div>
+      
+      {/* Scrollable content area - full width on mobile, adjusted margin on desktop */}
+      <div className="flex-1 overflow-y-auto md:ml-96">
+        {/* Mobile Step Progress */}
+        <div className="block md:hidden bg-gradient-to-r from-red-400 via-blue-500 to-yellow-400 p-4">
+          <div className="text-white text-center mb-2">
+            Step {currentStep} of 4
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-2.5">
+          <div className="w-full bg-white/20 rounded-full h-2">
             <div 
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-500"
+              className="bg-white rounded-full h-2 transition-all duration-500"
               style={{ width: `${(currentStep / 4) * 100}%` }}
-            ></div>
+            />
           </div>
         </div>
-        {renderStep()}
-      </div>  
-    </div>  
+
+        <div className="w-full max-w-4xl mx-auto px-4 md:px-8 py-8">
+          {renderStep()}
+        </div>
+      </div>
+    </div>
   );
 };
 

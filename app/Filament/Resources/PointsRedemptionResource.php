@@ -121,7 +121,6 @@ class PointsRedemptionResource extends Resource
     {
         return [
             'index' => Pages\ListPointsRedemptions::route('/'),
-            'create' => Pages\CreatePointsRedemption::route('/create'),
             'view' => Pages\ViewPointsRedemption::route('/{record}'),
             'edit' => Pages\EditPointsRedemption::route('/{record}/edit'),
         ];

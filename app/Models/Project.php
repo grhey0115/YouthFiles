@@ -20,6 +20,7 @@ class Project extends Model
         'header_image',
         'budget_id',
         'status',
+        'remaining_budget',
     ];
 
     public function disbursements()

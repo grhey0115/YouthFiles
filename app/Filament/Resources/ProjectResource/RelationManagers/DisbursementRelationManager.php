@@ -17,6 +17,8 @@ use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\BadgeColumn;
+use Filament\Notifications\Notification; 
+use Exception;
 
 
 class DisbursementRelationManager extends RelationManager
@@ -127,7 +129,7 @@ class DisbursementRelationManager extends RelationManager
                     ->directory('disbursement-documents'),
 
                 // Remarks
-                Forms\Components\TextArea::make('remarks')
+                Forms\Components\Textarea::make('remarks')
                     ->label('Remarks'),
 
                 // Status
@@ -170,30 +172,61 @@ class DisbursementRelationManager extends RelationManager
             ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+                Tables\Actions\DeleteAction::make()
+                    ->before(function (Disbursement $record) {
+                        // Fetch the project and budget
+                        $project = $record->project;
+                        $budget = $project->budget;
+
+                        // Restore the disbursed amount back to the project's remaining budget
+                        $project->remaining_budget += $record->disbursed_amount;
+                        $project->save();
+
+                        // Restore the disbursed amount back to the budget's remaining amount
+                        $budget->remaining_amount += $record->disbursed_amount;
+                        $budget->save();
+                    })
+                    ->requiresConfirmation(),
                 
-                Action::make('approve')
-                ->action(function (Disbursement $record) {
-                    $project = $record->project;
-                    $budget = $project->budget; // Assuming you have a relationship to the budget
-            
-                    // Check for sufficient funds (important!)
-                    if ($project->remaining_budget < $record->disbursed_amount || $budget->remaining_amount < $record->disbursed_amount) {
-                        // Throw exception or notification
-                        throw new \Exception('Insufficient funds in project or budget.');
-                    }
-            
-                    $record->status = 'approved';
-                    $record->save();
-            
-                    // Deduct from project and budget
-                    $project->remaining_budget -= $record->disbursed_amount;
-                    $project->save();
-            
-                    $budget->remaining_amount -= $record->disbursed_amount;
-                    $budget->save();
-                })
-                ->requiresConfirmation(),
+                    Action::make('approve')
+                    ->action(function (Disbursement $record) {
+                        try {
+                            $project = $record->project;
+                            $budget = $project->budget; // Assuming the budget relationship exists
+                
+                            // Check for sufficient funds
+                            if ($project->remaining_budget < $record->disbursed_amount) {
+                                throw new Exception(
+                                    "Insufficient funds.\n" .
+                                    "Project Remaining: ₱" . number_format($project->remaining_budget, 2) .
+                                    " | Requested: ₱" . number_format($record->disbursed_amount, 2)
+                                );
+                            }
+                
+                            // Approve and update statuses
+                            $record->status = 'approved';
+                            $record->save();
+                
+                            $project->remaining_budget -= $record->disbursed_amount;
+                            $project->save();
+                
+                            // Success notification
+                            Notification::make()
+                                ->title('Disbursement Approved')
+                                ->success()
+                                ->send();
+                
+                        } catch (Exception $e) {
+                            // Error notification
+                            Notification::make()
+                                ->title('Approval Failed')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    })
+                    ->requiresConfirmation(),
+                
     
                     // Disapprove action
                     Action::make('disapprove')

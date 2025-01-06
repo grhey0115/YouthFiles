@@ -10,24 +10,21 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\BadgeColumn;
 use Illuminate\Database\Eloquent\Model;
+use Filament\Tables\Actions\Action;
+use Filament\Notifications\Notification;
 
 class PaymentsRelationManager extends RelationManager
 {
     protected static string $relationship = 'payments';
-
     protected static ?string $recordTitleAttribute = 'reference_number';
 
-    /**
-     * Conditionally display the PaymentsRelationManager based on the event's registration fee.
-     */
     public function can(string $action, ?Model $record = null): bool
     {
-        // Ensure the relation manager is only visible if the registration fee is greater than 0
         if ($record instanceof \App\Models\Event && $record->registration_fee == 0) {
             return false; // Hide the relation manager if registration fee is 0
         }
 
-        return parent::can($action, $record); // Use default behavior for other actions
+        return parent::can($action, $record);
     }
 
     public function table(Tables\Table $table): Tables\Table
@@ -37,7 +34,7 @@ class PaymentsRelationManager extends RelationManager
                 TextColumn::make('user.name')->label('User'),
                 TextColumn::make('reference_number')->label('Reference Number'),
                 TextColumn::make('amount')->label('Amount')->money('PHP'),
-                ImageColumn::make('receipt_image')->label('Receipt')->size(100),
+                ImageColumn::make('receipt_image')->label('Receipt')->size(100), // Display as an image
                 BadgeColumn::make('status')->label('Status')->colors([
                     'primary' => 'pending',
                     'success' => 'successful',
@@ -45,25 +42,26 @@ class PaymentsRelationManager extends RelationManager
                 ]),
                 TextColumn::make('created_at')->label('Payment Date')->dateTime(),
             ])
-            ->filters([
-                // You can add filters if necessary
-            ])
             ->actions([
-                Tables\Actions\Action::make('approve')
+                Action::make('view-receipt')
+                    ->label('View Receipt')
+                    ->icon('heroicon-o-eye')
+                    ->color('secondary')
+                    ->modalHeading('Receipt')
+                    ->modalWidth('xl')
+                    ->modalContent(function (Payment $record) {
+                        return view('Filament.modals.view-receipt', ['payment' => $record]);
+                    }),
+                Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->action(function (Payment $record) {
                         $record->status = 'successful';
                         $record->save();
-
-                        // Attach the user to the event if not already attached
-                        if (!$record->event->users()->where('user_id', $record->user_id)->exists()) {
-                            $record->event->users()->attach($record->user_id);
-                        }
                     })
                     ->visible(fn (Payment $record) => $record->status === 'pending'),
 
-                Tables\Actions\Action::make('disapprove')
+                Action::make('disapprove')
                     ->label('Disapprove')
                     ->icon('heroicon-o-x-circle')
                     ->action(function (Payment $record) {
@@ -76,7 +74,7 @@ class PaymentsRelationManager extends RelationManager
             ]);
     }
 
-    public  function form(Forms\Form $form): Forms\Form
+    public function form(Forms\Form $form): Forms\Form
     {
         return $form
             ->schema([

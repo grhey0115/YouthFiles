@@ -229,7 +229,7 @@ class TanodRequestsResource extends Resource
                                 ]);
                             }
 
-                            return view('filament.modals.tanod-files', compact('files'));
+                            return view('Filament.modals.tanod-files', compact('files'));
                         }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

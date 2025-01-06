@@ -12,11 +12,15 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use App\Models\Budget;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Facades\Storage;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Notifications\Notification;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 
 class ProjectResource extends Resource
@@ -80,9 +84,32 @@ class ProjectResource extends Resource
             Forms\Components\DatePicker::make('end_date')
                 ->required(),
 
-            Forms\Components\TextInput::make('total_budget')
+                TextInput::make('total_budget')
                 ->numeric()
                 ->prefix('₱')
+                ->required()
+                ->afterStateUpdated(function ($state, $get, $set) {
+                    $budget = Budget::find($get('budget_id'));
+
+                    if ($budget && $state > $budget->remaining_amount) {
+                        Notification::make()
+                            ->title('Invalid Budget')
+                            ->body('Total budget exceeds available funds.')
+                            ->danger()
+                            ->send();
+
+                        // Optionally, reset the input
+                        $set('total_budget', null);
+
+                        // Alternatively, throw an exception
+                        throw ValidationException::withMessages([
+                            'total_budget' => 'The total budget exceeds the available budget for this funding source.'
+                        ]);
+                    }
+                }),
+
+                Forms\Components\Hidden::make('remaining_budget')
+                ->default(fn ($get) => $get('total_budget')) // Automatically set to total_budget
                 ->required(),
           
         ]);
@@ -122,8 +149,8 @@ public static function table(Table $table): Table
                 ->label('Remaining Budget')
                 ->money('PHP')
                 ->color(function ($state, $record) {
-                    $percentage = $record->total_budget > 0 
-                        ? ($state / $record->total_budget) * 100 
+                    $percentage = $record->remaining_budget > 0 
+                        ? ($state / $record->remaining_budget) * 100 
                         : 0;
 
                     return match(true) {

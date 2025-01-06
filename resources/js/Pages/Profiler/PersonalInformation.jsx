@@ -32,6 +32,19 @@ const PersonalInformationStep = ({
     back_id: null
   });
 
+  const validateFamilyMembers = (value) => {
+    if (value < (data.is_solo_parent ? 2 : 1)) {
+      setErrors({
+        ...errors,
+        family_members: data.is_solo_parent
+          ? 'A solo parent must have at least 2 family members.'
+          : 'Must be at least 1 family member.',
+      });
+    } else {
+      setErrors({ ...errors, family_members: '' });
+    }
+  };
+
   const handleFileChange = (file, fileType) => {
     setFiles(prev => ({
       ...prev,
@@ -49,22 +62,18 @@ const PersonalInformationStep = ({
     }));
   };
 
-  
-
   return (
- 
-    <div >
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
-          <FaUser className="text-blue-500" />
-          Personal Information
-        </h2>
-            <p className="text-gray-600 flex items-center justify-center gap-1 mt-2 mb-10" >
-              <IoMdInformationCircleOutline className="text-blue-400" />
-              Please fill up the necessary information
-            </p>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        {/* Barangay */}
-                         {/* Barangay and Sitio */}
+    <div>
+      <h2 className="text-2xl font-bold text-gray-800 flex items-center justify-center gap-2">
+        <FaUser className="text-blue-500" />
+        Personal Information
+      </h2>
+      <p className="text-gray-600 flex items-center justify-center gap-1 mt-2 mb-10">
+        <IoMdInformationCircleOutline className="text-blue-400" />
+        Please fill up the necessary information
+      </p>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* Barangay */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">Barangay</label>
@@ -190,8 +199,58 @@ const PersonalInformationStep = ({
           </div>
         </div>
 
+        {/* Parent Checkbox */}
+        <div className="relative flex items-center mt-4">
+          <input
+            type="checkbox"
+            id="is_parent"
+            name="is_parent"
+            checked={data.is_parent}
+            onChange={handleChange}
+            className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+          />
+          <label htmlFor="is_parent" className="ml-2 text-sm font-medium text-gray-700">
+            Are you a Parent?
+          </label>
+        </div>
+
+        {/* Solo Parent and Live In checkboxes, visible only if "Are you a Parent?" is checked */}
+        {data.is_parent && (
+          <div className="ml-6">
+            {/* Solo Parent Checkbox */}
+            <div className="relative flex items-center mt-4">
+              <input
+                type="checkbox"
+                id="is_solo_parent"
+                name="is_solo_parent"
+                checked={data.is_solo_parent}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="is_solo_parent" className="ml-2 text-sm font-medium text-gray-700">
+                Are you a Solo Parent?
+              </label>
+            </div>
+
+            {/* Live In Checkbox */}
+            <div className="relative flex items-center mt-4">
+              <input
+                type="checkbox"
+                id="is_live_in"
+                name="is_live_in"
+                checked={data.is_live_in}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="is_live_in" className="ml-2 text-sm font-medium text-gray-700">
+                Do you live in?
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Family Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">Number of Family Members</label>
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -201,9 +260,16 @@ const PersonalInformationStep = ({
               type="number"
               name="family_members"
               value={data.family_members}
-              onChange={handleChange}
-              disabled={!(data.civil_status === 'married' || data.is_solo_parent || data.civil_status === 'widowed')}
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+              onChange={(e) => {
+                handleChange(e);
+                validateFamilyMembers(e.target.value);
+              }}
+              disabled={!data.is_parent}
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 ${
+                !data.is_parent 
+                  ? 'disabled:bg-gray-100' 
+                  : 'focus:ring-blue-500'
+              }`}
             />
           </div>
 
@@ -221,36 +287,37 @@ const PersonalInformationStep = ({
             />
           </div>
         </div>
-                     {/*  <FileUploader 
-                          name="front_id"
-                          label="Upload Front ID"
-                          files={files}
-                          dragging={dragging}
-                          setDragging={setDragging}
-                          handleFileChange={handleFileChange}
-                          handleRemoveFile={handleRemoveFile}
-                        />
 
-                        <FileUploader 
-                          name="back_id"
-                          label="Upload Back ID"
-                          files={files}
-                          dragging={dragging}
-                          setDragging={setDragging}
-                          handleFileChange={handleFileChange}
-                          handleRemoveFile={handleRemoveFile}
-                        />*/} 
+        {/* File Uploaders */}
+        {/* <FileUploader 
+          name="front_id"
+          label="Upload Front ID"
+          files={files}
+          dragging={dragging}
+          setDragging={setDragging}
+          handleFileChange={handleFileChange}
+          handleRemoveFile={handleRemoveFile}
+        />
 
-      
+        <FileUploader 
+          name="back_id"
+          label="Upload Back ID"
+          files={files}
+          dragging={dragging}
+          setDragging={setDragging}
+          handleFileChange={handleFileChange}
+          handleRemoveFile={handleRemoveFile}
+        /> */}
+
         <div className="flex mt-4 col-span-2">
-        <button
-          type="button"
-          onClick={handleNextStep}
-          disabled={!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status}
-          className={`px-4 py-2 rounded-lg flex-grow mb-6 ${!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white'}`}
-        >
-          Next
-        </button>
+          <button
+            type="button"
+            onClick={handleNextStep}
+            disabled={!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status}
+            className={`px-4 py-2 rounded-lg flex-grow mb-6 ${!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white'}`}
+          >
+            Next
+          </button>
         </div>
       </form>
     </div>

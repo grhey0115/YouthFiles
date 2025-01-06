@@ -50,7 +50,7 @@ class DonationsRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('donation.title')
                     ->label('Donation'),
                 Tables\Columns\TextColumn::make('amount')
-                    ->money()
+                    ->money('php')
                     ->label('Amount'),
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Quantity'),
@@ -76,7 +76,19 @@ class DonationsRelationManager extends RelationManager
                     ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('approve')
+                ->label('Approve')
+                ->icon('heroicon-o-check-circle') // Use an icon for clarity
+                ->color('success')
+                ->action(fn ($record) => $record->update(['status' => 'approved']))
+                ->visible(fn ($record) => $record->status === 'pending'), // Show only if status is pending
+        
+            Tables\Actions\Action::make('reject')
+                ->label('Reject')
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
+                ->action(fn ($record) => $record->update(['status' => 'rejected']))
+                ->visible(fn ($record) => $record->status === 'pending'),
                 Tables\Actions\DeleteAction::make(),
             ]);
     }

@@ -1,0 +1,1 @@
+import{j as e}from"./app-yAQSJtCB.js";const r=({announcement:s})=>e.jsxs("div",{className:"container",children:[e.jsx("h1",{children:s.title}),e.jsxs("p",{className:"text-muted",children:["Published on ",new Date(s.published_at).toLocaleString()]}),e.jsx("div",{dangerouslySetInnerHTML:{__html:s.message}})]});export{r as default};

@@ -128,7 +128,7 @@ class Ayuda_ApplicantRelationManager extends RelationManager
                 ->modalWidth('xl')
                 ->modalContent(function (AyudaApplicant $record) {
                     $files = $record->files()->with('requirement')->get();
-                    return view('filament.modals.view-files', compact('files'));
+                    return view('Filament.modals.view-files', compact('files'));
                 }),
 
             // Action for viewing assistance history
@@ -140,7 +140,7 @@ class Ayuda_ApplicantRelationManager extends RelationManager
                 ->modalWidth('xl')
                 ->modalContent(function (AyudaApplicant $record) {
                     $history = \App\Models\AyudaApplicantHistory::where('user_id', $record->user_id)->get();
-                    return view('filament.modals.view-history', compact('history'));
+                    return view('Filament.modals.view-history', compact('history'));
                 }),
         ])
 

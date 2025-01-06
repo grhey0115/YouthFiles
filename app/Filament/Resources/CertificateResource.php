@@ -50,8 +50,8 @@ class CertificateResource extends Resource
                             ->label('Signature Image')
                             ->disk('public')
                             ->directory('certificates/signatures')
-                            ->preserveFilenames()
-                            ->required(),
+                            ->preserveFilenames(),
+                          
                     ])
                     ->columns(2) // Adjust the number of columns as needed
                     ->createItemButtonLabel('Add Signature'),

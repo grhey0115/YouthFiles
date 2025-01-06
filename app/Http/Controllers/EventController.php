@@ -207,7 +207,7 @@ class EventController extends Controller
         }
 
         // Store receipt file if uploaded
-        $receiptPath = $request->hasFile('receipt') ? $request->file('receipt')->store('receipts') : null;
+        $receiptPath = $request->hasFile('receipt') ? $request->file('receipt')->store('receipts', 'public') : null;
 
         // Store the payment in the database
         Payment::create([

@@ -103,7 +103,7 @@ const EventShow = () => {
         formData.append('receipt', fileList[0].originFileObj);
 
         try {
-            await router.post(route('events.payment.store', event.id), formData, {
+            await router.post(route('events.payment', event.id), formData, {
                 onSuccess: () => {
                     setIsModalVisible(false);
                     setPaymentStatus('pending');
@@ -233,7 +233,6 @@ const EventShow = () => {
         const shareUrls = {
             facebook: `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(eventUrl)}`,
             twitter: `https://twitter.com/intent/tweet?text=${eventTitle}&url=${encodeURIComponent(eventUrl)}`,
-            linkedin: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(eventUrl)}`,
             whatsapp: `https://api.whatsapp.com/send?text=${eventTitle}%20${encodeURIComponent(eventUrl)}`
         };
 
@@ -260,15 +259,7 @@ const EventShow = () => {
                         onClick={() => handleShare('twitter')}
                         style={{ backgroundColor: '#1da1f2' }}
                     />
-                </Tooltip>
-                <Tooltip title="Share on LinkedIn">
-                    <Button
-                        type="primary"
-                        shape="circle"
-                        icon={<LinkedinFilled />}
-                        onClick={() => handleShare('linkedin')}
-                        style={{ backgroundColor: '#0a66c2' }}
-                    />
+               
                 </Tooltip>
                 <Tooltip title="Share on WhatsApp">
                     <Button
@@ -441,14 +432,7 @@ const EventShow = () => {
                                                 className="text-[#1da1f2] hover:text-[#1da1f2]/80"
                                             />
                                         </Tooltip>
-                                        <Tooltip title="Share on LinkedIn">
-                                            <Button
-                                                type="text"
-                                                icon={<LinkedinFilled />}
-                                                onClick={() => handleShare('linkedin')}
-                                                className="text-[#0a66c2] hover:text-[#0a66c2]/80"
-                                            />
-                                        </Tooltip>
+                                        
                                         <Tooltip title="Share on WhatsApp">
                                             <Button
                                                 type="text"
