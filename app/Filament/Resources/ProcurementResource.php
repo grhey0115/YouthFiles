@@ -68,7 +68,7 @@ class ProcurementResource extends Resource
                 ->required()
                 ->label('Procurement Date'),
 
-            Forms\Components\TextArea::make('purpose')
+            Forms\Components\Textarea::make('purpose')
                 ->required()
                 ->label('Purpose or Justification'),
 
@@ -90,7 +90,7 @@ class ProcurementResource extends Resource
                 ->label('Procurement Officer'),
               
                 
-            Forms\Components\TextArea::make('remarks')
+            Forms\Components\Textarea::make('remarks')
                 ->label('Remarks'),
 
             /*    Forms\Components\TextInput::make('allotment_available')

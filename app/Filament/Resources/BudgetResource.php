@@ -151,7 +151,7 @@ class BudgetResource extends Resource
                                             : '₱ 0.00';
                                     }),
     
-                                Forms\Components\Placeholder::make('remaining_balance')
+                                Forms\Components\Placeholder::make('remaining_amount')
                                     ->label('Remaining Balance')
                                     ->content(function ($record) {
                                         if (!$record) return '₱ 0.00';

@@ -28,6 +28,22 @@ class Budget extends Model
 
     ];
 
+    protected static function boot()
+{
+    parent::boot();
+
+    static::creating(function ($model) {
+        $model->remaining_amount = $model->remaining_amount ?? $model->total_amount;
+    });
+
+    static::updating(function ($model) {
+        if (is_null($model->remaining_amount)) {
+            $model->remaining_amount = $model->total_amount;
+        }
+    });
+}
+
+
     public function procurements()
     {
         return $this->hasMany(Procurement::class);

@@ -108,8 +108,8 @@ class ProjectResource extends Resource
                     }
                 }),
 
-                Forms\Components\Hidden::make('remaining_budget')
-                ->default(fn ($get) => $get('total_budget')) // Automatically set to total_budget
+                TextInput::make('remaining_budget')
+                ->default(fn ($get) => $get('total_budget'))
                 ->required(),
           
         ]);

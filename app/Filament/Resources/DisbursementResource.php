@@ -127,7 +127,7 @@ class DisbursementResource extends Resource
                     ->directory('disbursement-documents'),
 
                 // Remarks
-                Forms\Components\TextArea::make('remarks')
+                Forms\Components\Textarea::make('remarks')
                     ->label('Remarks'),
 
                 // Status

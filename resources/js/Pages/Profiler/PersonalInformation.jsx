@@ -26,6 +26,7 @@ const PersonalInformationStep = ({
   handleDragLeave,
 }) => {
   const [dragging, setDragging] = useState(false);
+  const [errors, setErrors] = useState({});
   const barangays = ['Casay'];
   const [files, setFiles] = useState({
     front_id: null,
@@ -45,21 +46,29 @@ const PersonalInformationStep = ({
     }
   };
 
-  const handleFileChange = (file, fileType) => {
-    setFiles(prev => ({
-      ...prev,
-      [fileType]: file
-    }));
-    if (typeof handleFileUpload === 'function') {
-      handleFileUpload(file, fileType);
+
+  const validateAge = (age) => {
+    if (age < 15 || age > 30) {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        age: 'Age must be between 15 and 30.',
+      }));
+    } else {
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        age: '',
+      }));
     }
   };
 
-  const handleRemoveFile = (fileType) => {
-    setFiles(prev => ({
-      ...prev,
-      [fileType]: null
-    }));
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'age') {
+      validateAge(value);
+    }
+
+    handleChange(e); // Call the parent's change handler
   };
 
   return (
@@ -135,10 +144,13 @@ const PersonalInformationStep = ({
               type="number"
               name="age"
               value={data.age}
-              onChange={handleChange}
+              onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full pl-10 pr-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 ${
+                errors.age ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
             />
+            {errors.age && <p className="text-red-500 text-sm mt-1">{errors.age}</p>}
           </div>
         </div>
 
@@ -233,19 +245,7 @@ const PersonalInformationStep = ({
             </div>
 
             {/* Live In Checkbox */}
-            <div className="relative flex items-center mt-4">
-              <input
-                type="checkbox"
-                id="is_live_in"
-                name="is_live_in"
-                checked={data.is_live_in}
-                onChange={handleChange}
-                className="w-5 h-5 text-blue-500 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="is_live_in" className="ml-2 text-sm font-medium text-gray-700">
-                Do you live in?
-              </label>
-            </div>
+           
           </div>
         )}
 
@@ -288,33 +288,17 @@ const PersonalInformationStep = ({
           </div>
         </div>
 
-        {/* File Uploaders */}
-        {/* <FileUploader 
-          name="front_id"
-          label="Upload Front ID"
-          files={files}
-          dragging={dragging}
-          setDragging={setDragging}
-          handleFileChange={handleFileChange}
-          handleRemoveFile={handleRemoveFile}
-        />
-
-        <FileUploader 
-          name="back_id"
-          label="Upload Back ID"
-          files={files}
-          dragging={dragging}
-          setDragging={setDragging}
-          handleFileChange={handleFileChange}
-          handleRemoveFile={handleRemoveFile}
-        /> */}
-
+        
         <div className="flex mt-4 col-span-2">
-          <button
+        <button
             type="button"
             onClick={handleNextStep}
-            disabled={!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status}
-            className={`px-4 py-2 rounded-lg flex-grow mb-6 ${!data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-500 text-white'}`}
+            disabled={!!errors.age || !data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status}
+            className={`px-4 py-2 rounded-lg flex-grow mb-6 ${
+              !!errors.age || !data.barangay || !data.date_of_birth || !data.age || !data.gender || !data.civil_status
+                ? 'bg-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white'
+            }`}
           >
             Next
           </button>

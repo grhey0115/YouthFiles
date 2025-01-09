@@ -70,6 +70,7 @@ class DigitalPaymentTransferResource extends Resource
                             ->options([
                                 'gcash' => 'GCash',
                                 'bank_transfer' => 'Bank Transfer',
+								'cheque' => 'Cheque',
                                 'palawan_express' => 'Palawan Express',
                                 'cebuana' => 'Cebuana Lhuiller',
                                 'direct_deposit' => 'Direct Bank Deposit'

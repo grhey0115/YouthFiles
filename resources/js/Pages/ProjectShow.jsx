@@ -17,6 +17,7 @@ import {
 
 const { Title, Text, Paragraph } = Typography;
 
+
 const ProjectShow = () => {
     const { project, auth } = usePage().props;
     const [activeTab, setActiveTab] = useState('procurements');
@@ -30,9 +31,12 @@ const ProjectShow = () => {
         }).format(numericAmount);
     };
 
+  
+
     const calculateTotalCost = (items) => {
         if (!Array.isArray(items)) return 0;
         return items.reduce((sum, item) => {
+            // Here we assume total_cost is a number or can be converted to a number
             const itemCost = Number(item.total_cost) || 0;
             return sum + itemCost;
         }, 0);
@@ -179,7 +183,10 @@ const ProjectShow = () => {
                     rowKey="id"
                     summary={(pageData) => {
                         const totalCost = pageData.reduce(
-                            (sum, item) => sum + (item.total_cost || 0),
+                            (sum, item) => {
+                              const itemCost = Number(item.total_cost) || 0;
+                              return sum + itemCost;
+                            },
                             0
                         );
 

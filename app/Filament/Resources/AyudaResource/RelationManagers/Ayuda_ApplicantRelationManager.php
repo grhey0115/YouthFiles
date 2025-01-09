@@ -111,7 +111,7 @@ class Ayuda_ApplicantRelationManager extends RelationManager
                     $record->user->notify(new ApplicationStatusNotification('disapproved', $data['reason']));
                 })
                 ->form([
-                    Forms\Components\TextArea::make('reason')
+                    Forms\Components\Textrea::make('reason')
                         ->label('Reason for Disapproval')
                         ->required()
                         ->placeholder('Please provide the reason for disapproval...'),

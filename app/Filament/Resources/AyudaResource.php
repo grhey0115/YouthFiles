@@ -350,7 +350,7 @@ public static function table(Table $table): Table
                 Tables\Actions\DeleteAction::make(),
                 Tables\Actions\Action::make('viewApplicants')
                     ->label('View Applicants')
-                    ->url(fn (Ayuda $record) => route('filament.admin.resources.ayudas.view', ['record' => $record->getKey()])),
+                    ->url(fn (Ayuda $record) => route('Filament.admin.resources.ayudas.view', ['record' => $record->getKey()])),
             ])
             ->defaultSort('created_at', 'desc')
             ->bulkActions([
